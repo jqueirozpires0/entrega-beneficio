@@ -1,0 +1,55 @@
+<ion-content class="lojas-content">
+  <div class="lojas-container">
+    <div class="page-header">
+      <div class="header-content">
+        <h1 class="page-title">Login</h1>
+      </div>
+      <p class="page-subtitle">Acesse o sistema para gerenciar suas visitas</p>
+    </div>
+    <div>
+      <img src="../../../assets/icon/image.jpeg" alt="Login Illustration"
+        style="width: 100%; max-width: 260px; display: block; margin: 0 auto 24px auto;">
+    </div>
+    <div>
+      <form [formGroup]="loginForm" (ngSubmit)="realizaLogin()">
+        <ion-list class="lojas-list" lines="none">
+          <ion-item class="loja-item">
+            <ion-icon name="person-outline" slot="start" class="loja-icon"></ion-icon>
+            <ion-input placeholder="Usuário (CPF)" formControlName="usuario" maxlength="14" [maskito]="cpfMask"
+              [maskitoElement]="maskPredicate" type="tel" required></ion-input>
+          </ion-item>
+          <ion-note color="danger" class="form-error-message"
+            *ngIf="(usuario?.hasError('required') || usuario?.hasError('pattern')) && (usuario?.dirty || usuario?.touched)">
+            Insira um CPF válido
+          </ion-note>
+          <ion-item class="loja-item">
+            <ion-icon name="lock-closed-outline" slot="start" class="loja-icon"></ion-icon>
+            <ion-input placeholder="Senha" formControlName="senha" type="password" required></ion-input>
+          </ion-item>
+          <ion-note color="danger" class="form-error-message"
+            *ngIf="senha?.hasError('required') && (senha?.dirty || senha?.touched)">
+            Insira uma senha
+          </ion-note>
+        </ion-list>
+        <ion-row style="margin-top: 24px; display: flex; flex-wrap: nowrap;">
+          <ion-col size="6">
+            <ion-button style="width: 100%;" expand="block" color="medium" type="button" (click)="trocaMunicipio()">
+              <ion-icon slot="start" name="swap-horizontal-outline"></ion-icon>
+              Trocar município
+            </ion-button>
+          </ion-col>
+          <ion-col size="6">
+            <ion-button style="width: 100%;" expand="block" color="primary" type="submit"
+              [disabled]="loginForm.invalid">
+              <ion-icon slot="start" name="log-in-outline"></ion-icon>
+              Login
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </form>
+    </div>
+  </div>
+  <div class="footer-content">
+    <img src="../../../assets/icon/1.jpeg" alt="Footer Illustration" style="width: 100%; max-width: 120px; display: block; margin: 0 auto;"/>
+  </div>
+</ion-content>

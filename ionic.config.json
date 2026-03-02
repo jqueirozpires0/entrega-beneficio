@@ -1,0 +1,7 @@
+{
+  "name": "Cozinha Comunitária",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

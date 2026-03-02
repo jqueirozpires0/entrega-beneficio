@@ -1,0 +1,38 @@
+<ion-content class="lojas-content">
+  <div class="lojas-container">
+    <div class="page-header">
+      <div class="header-content">
+        <h1 class="page-title">Selecione o Município</h1>
+      </div>
+      <p class="page-subtitle">Escolha o estado e município para acessar o sistema</p>
+    </div>
+    <form [formGroup]="licencaForm">
+      <ion-list class="lojas-list" lines="none">
+        <ion-item class="loja-item">
+          <ion-icon name="flag-outline" slot="start" class="loja-icon"></ion-icon>
+          <ion-select label="Estado" formControlName="estado" (ionChange)="listarMunicipios()">
+            <ion-select-option *ngFor="let estadoObj of listaEstado" [value]="estadoObj">
+              {{estadoObj.descricao}}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item class="loja-item">
+          <ion-icon name="business-outline" slot="start" class="loja-icon"></ion-icon>
+          <ion-select label="Município" formControlName="municipio">
+            <ion-select-option *ngFor="let municipioObj of listaMunicipios" [value]="municipioObj">
+              {{municipioObj.nomeMunicipio}}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-list>
+      <ion-row style="margin-top: 24px;">
+        <ion-col size="12">
+          <ion-button expand="block" color="primary" [disabled]="licencaForm.invalid" (click)="navegaParaLogin()">
+            <ion-icon slot="start" name="log-in-outline"></ion-icon>
+            Acessar
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </form>
+  </div>
+</ion-content>

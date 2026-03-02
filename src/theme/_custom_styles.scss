@@ -1,0 +1,59 @@
+ion-list {
+  background: transparent !important;
+}
+
+ion-button {
+  --background: linear-gradient(to top, #fe9634, #fe6b34) !important;
+  --background-hover: transparent !important;
+  --background-activated: transparent !important;
+  --background-focused: transparent !important;
+}
+
+
+ion-item {
+  --background: #fff;
+  --color: #000;
+
+  --min-height: 55px;
+}
+
+//FOR THE TOAST SERVICE
+.toast-error {
+  --background: var(--ion-color-danger-shade);
+  --color: white !important;
+  --button-color: #ffff;
+  font-weight: bold;
+
+  text-align: center;
+}
+
+.toast-error .button-inner {
+  color: white !important;
+}
+
+.toast-success {
+  --background: linear-gradient(to top, #fe9634, #fe6b34) !important;
+  --color: white !important;
+  --button-color: #ffff;
+  font-weight: bold;
+  text-align: center;
+}
+
+//FOR THE FORM INPUT AND MESSAGE VALIDATION
+.form-error-message {
+  font-size: 13px;
+  color: var(--ion-color-light);
+}
+
+.form-error-input {
+  border-bottom: 1px solid var(--ion-color-light) !important;
+  margin-bottom: 5px;
+}
+
+//FOR BARCODE SCANNER
+
+body.barcode-scanning-active {
+  visibility: hidden;
+  --background: transparent;
+  --ion-background-color: transparent;
+}

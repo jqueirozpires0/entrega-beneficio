@@ -1,0 +1,139 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  padding: 0 20px;
+
+  form ion-button {
+    margin-top: 60px;
+  }
+
+  ion-item {
+    border-radius: 8px;
+
+    &:first-child {
+      margin-bottom: 10px;
+    }
+  }
+
+  .logo-container {
+    align-self: center;
+    ion-img {
+      width: 300px;
+    }
+  }
+
+  .footer-container {
+    align-self: center;
+
+    ion-img {
+      width: 80px;
+    }
+  }
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgba(0, 113, 187, 0.5), rgba(79, 159, 201, 0.5)); /* Ajuste as cores e opacidade conforme necessário */
+  z-index: 1; /* Coloca a sobreposição sobre a imagem de fundo */
+}
+
+.container > * {
+  position: relative; /* Garante que os filhos diretos do contêiner estejam acima da sobreposição */
+  z-index: 2; /* Garante que o conteúdo esteja na frente da sobreposição */
+}
+
+.lojas-content {
+  --background: #f5f7fa;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 80px;
+  padding: 10px;
+}
+
+.lojas-container {
+  padding: 1rem;
+  max-width: 100%;
+}
+
+.page-header {
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  padding: 2rem 1.5rem 1.5rem;
+  margin: -1rem -1rem 1.5rem -1rem;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.count-badge {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.page-subtitle {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-weight: 400;
+}
+
+.lojas-list {
+  background: transparent;
+  padding: 0;
+}
+
+.loja-item {
+  --background: #ffffff;
+  --border-radius: 16px;
+  --padding-end: 0;
+  --inner-padding-end: 16px;
+  --inner-padding-start: 16px;
+  --min-height: auto;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.loja-icon {
+  font-size: 1.5rem;
+  color: var(--ion-color-primary);
+}
+
+.loja-content {
+  flex: 1;
+  margin: 0;
+  padding: 10px;
+}

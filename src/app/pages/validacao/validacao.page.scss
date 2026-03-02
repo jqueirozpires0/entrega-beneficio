@@ -1,0 +1,305 @@
+ion-toolbar {
+  --background: #2659a1;
+
+  ion-button {
+    --background: transparent !important;
+    color: #2659A1;
+  }
+}
+
+ion-text {
+  font-size: 20px;
+  color: black;
+  
+  font-family: 'Phenomena';
+}
+
+.scan-title {
+  font-size: 1.2rem;
+  color: #2659a1;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.scan-instruction {
+  font-size: 0.95rem;
+  color: #6f93c4;
+  margin-top: 4px;
+}
+
+.cpf-button {
+  --background: #fecb31 !important;
+  --color: #2659a1;
+  font-family: "Phenomena";
+  font-size: 1.1rem;
+  margin-top: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(254, 203, 49, 0.15);
+}
+
+.ion-button-sincronizar {
+  --background: #fecb31 !important;
+  --color: #2659a1;
+  font-family: "Phenomena";
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+.scan-container {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  flex: 1;
+
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(38, 89, 161, 0.08);
+  border: 2px solid #2659a1;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.scan-container:hover {
+  box-shadow: 0 4px 16px rgba(38, 89, 161, 0.18);
+  border-color: #fecb31;
+}
+
+.contador {
+  background-color: #fecb31;
+  color: #2659a1;
+  border-radius: 30px;
+  height: 45px;
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  font-size: 25px;
+  font-family: "Phenomena";
+  margin: 0 auto 10px auto;
+  border: 2px solid #2659a1;
+}
+
+.count-row {
+  display: flex;
+  width: 70%;
+  text-align: center;
+  gap: 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(38, 89, 161, 0.08);
+  padding: 16px 0;
+}
+
+.count-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  color: #2659a1;
+  font-weight: 500;
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  height: 100%;
+  background: linear-gradient(to bottom,
+      #2659A1 0%,
+      #6f93c4 50%,
+      #FFFFFF 100%);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  padding: 0 20px 40px;
+  gap: 20px;
+
+  .logo-container {
+    align-self: center;
+
+    ion-img {
+      width: 100px;
+    }
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 10px;
+
+    .page-title {
+      font-size: 2rem;
+      font-family: 'Phenomena', sans-serif;
+      color: #2659a1;
+      margin-bottom: 0;
+    }
+
+    .page-subtitle {
+      font-size: 1rem;
+      color: #6f93c4;
+      margin-top: 0;
+    }
+  }
+
+  .start-scan-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+}
+
+ion-modal {
+  --height: 100%;
+
+  * {
+    text-align: center;
+  }
+
+  ion-item {
+    --border-radius: 16px;
+  }
+}
+
+.modal-content {
+  min-height: 100%;
+  width: 100%;
+  padding: 30px;
+  --border-radius: 16px;
+
+  h2,
+  h3 {
+    margin: 0;
+    padding: 0;
+  }
+
+  h2 {
+    text-transform: uppercase;
+    margin-top: 20px;
+  }
+
+  h3 {
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+}
+
+.validacao-content {
+  --background: linear-gradient(135deg, #f5f7fa 0%, #e3eafc 100%);
+}
+
+.validacao-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 24px 12px 32px 12px;
+}
+
+.logo-area {
+  margin-bottom: 16px;
+}
+.logo-img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(38,89,161,0.08);
+  background: #fff;
+}
+
+.actions-area {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.action-card {
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(38,89,161,0.08);
+  background: #fff;
+}
+.action-icon {
+  font-size: 2.2rem;
+  color: #2659a1;
+  margin-bottom: 8px;
+}
+ion-card-title {
+  font-size: 1.3rem;
+  color: #2659a1;
+  font-family: 'Phenomena', sans-serif;
+}
+ion-card-content p {
+  font-size: 1rem;
+  color: #6f93c4;
+  margin-bottom: 16px;
+}
+ion-button {
+  font-size: 1.1rem;
+  border-radius: 10px;
+  font-family: 'Phenomena', sans-serif;
+}
+ion-button[color="primary"] {
+  --background: #2659a1;
+  --color: #fff;
+}
+ion-button[color="warning"] {
+  --background: #fecb31;
+  --color: #2659a1;
+}
+ion-button[color="tertiary"] {
+  --background: #6f93c4;
+  --color: #fff;
+}
+
+.status-area {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 16px;
+}
+.status-card {
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(38,89,161,0.08);
+  background: #fff;
+  padding: 12px 0;
+}
+.status-icon {
+  font-size: 2rem;
+  color: #2659a1;
+  margin-bottom: 8px;
+}
+.status-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+.status-label {
+  color: #6f93c4;
+  font-weight: 500;
+}
+.status-value {
+  color: #2659a1;
+  font-weight: bold;
+}
+.sync-btn {
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+  .actions-area, .status-area {
+    max-width: 100%;
+  }
+  .validacao-container {
+    padding: 12px 4px 16px 4px;
+    gap: 18px;
+  }
+}

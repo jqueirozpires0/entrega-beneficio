@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cozinha Comunitária</string>
+    <string name="title_activity_main">Cozinha Comunitária</string>
+    <string name="package_name">vv.cozinhacomunitaria.app</string>
+    <string name="custom_url_scheme">vv.cozinhacomunitaria.app</string>
+</resources>

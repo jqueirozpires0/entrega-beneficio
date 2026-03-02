@@ -1,0 +1,94 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="light">
+    <ion-title style="text-align: center;">Entrega de Benefícios</ion-title>
+    <ion-buttons slot="start">
+      <ion-button title="Menu">
+        <ion-img src="../../../assets/images/logo.jpeg" alt="Menu Icon" style="width: 30px; height: 30px;"></ion-img>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()" title="Sair">
+        <ion-icon name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content [fullscreen]="true" class="validacao-content">
+  <div class="validacao-container">
+    <ion-row style="display: none;">
+      <ion-col>
+        <ion-card id="open-modal">
+          <ion-modal trigger="open-modal">
+            <ng-template>
+              <ion-header>
+                <ion-toolbar>
+                  <ion-buttons style="font-size: 30px;" slot="start">
+                    <ion-icon style="color: white;" (click)="cancel()" name="arrow-back-circle-outline"></ion-icon>
+                  </ion-buttons>
+                  <ion-buttons style="font-size: 30px;" slot="end">
+                    <ion-icon style="color: white; pointer-events: none; visibility: hidden;" (click)="cancel()" name="arrow-back-circle-outline"></ion-icon>
+                  </ion-buttons>
+                  <ion-title style="text-align: center;color: white;" class="ion-text-center">Entregas Por
+                    CPF</ion-title>
+                </ion-toolbar>
+              </ion-header>
+              <ion-content class="ion-padding">
+                <ion-item>
+                  <ion-input placeholder="CPF do Beneficiário" maxlength="14" [maskito]="cpfMask"
+                    [maskitoElement]="maskPredicate" type="tel" [(ngModel)]='cpfInput'></ion-input>
+                </ion-item>
+                <ion-button (click)="validaCpf()"
+                  style="--background: #2659a1 !important;width: 100%;margin-top: 50px;">
+                  &nbsp; Entregar
+                </ion-button>
+              </ion-content>
+            </ng-template>
+          </ion-modal>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+    <div class="actions-area">
+      <ion-card class="action-card">
+        <ion-card-header
+          style="display: flex; flex-direction: row-reverse; justify-content: space-between;">
+          <ion-icon name="qr-code-outline" class="action-icon"></ion-icon>
+          <ion-card-title>Escanear QR Code</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>Escaneie o cartão do beneficiário para validar a entrega.</p>
+          <ion-button expand="block" style="--background: #2659a1 !important;" size="large" (click)="startScan()">
+            <ion-icon slot="start" name="qr-code-outline"></ion-icon>
+            Iniciar Leitura
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+      <ion-card class="action-card">
+        <ion-card-header
+          style="display: flex; flex-direction: row-reverse; justify-content: space-between;  ">
+          <ion-icon name="person-circle-outline" class="action-icon"></ion-icon>
+          <ion-card-title>Entrega por CPF</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>Valide a entrega informando o CPF do beneficiário.</p>
+          <ion-button expand="block" size="large" color="warning" (click)="entregaSemCartao()">
+            <ion-icon slot="start" name="person-circle-outline"></ion-icon>
+            Validar por CPF
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+      <ion-card class="status-card">
+        <ion-card-header
+          style="display: flex; flex-direction: row-reverse; justify-content: space-between;">
+          <ion-icon name="checkmark-circle-outline" class="status-icon"></ion-icon>
+          <ion-card-title>Status das Entregas</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="status-info">
+            <span class="status-label">Entregas realizadas</span>
+            <span class="status-value">{{onlineCounter}}</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>
