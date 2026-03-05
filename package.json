@@ -35,6 +35,7 @@
     "@ionic/angular": "^8.0.0",
     "@maskito/angular": "^2.3.2",
     "@maskito/core": "^2.3.2",
+    "@zxing/ngx-scanner": "^19.0.0",
     "ionicons": "^7.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
