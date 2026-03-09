@@ -25,7 +25,7 @@ export class ValidacaoPage implements OnDestroy {
   onlineCounter = 0;
   offlineCounter = 0;
   status = null;
-  listaBeneficiarios = servico.beneficios;
+  listaBeneficiarios: any[] = [];
 
   readonly cpfMask: MaskitoOptions = {
     mask: [
@@ -55,13 +55,24 @@ export class ValidacaoPage implements OnDestroy {
   }
 
   async ionViewDidEnter() {
+    const status = await Network.getStatus();
+    console.log(this.listaBeneficiarios, 'ANTES DA VERIFICAÇÃO DE REDE');
+    if (status.connected === true) {
+      this.listaBeneficiarios = Mentor.executaVisao(3453, 'varcodigoBeneficio=1235');
+    } else {
+      this.listaBeneficiarios = (await this.storageService.getValue<any[]>(
+        StorageKeysEnums.listaPessoas
+      )) ?? [];
+    }
+    console.log(this.listaBeneficiarios, 'DEPOIS DA VERIFICAÇÃO DE REDE');
     const entregas =
       await this.storageService.getValue<any[]>(
         StorageKeysEnums.beneficiarioOffline
       );
+    this.status = status.connected;
 
     this.offlineCounter = entregas?.length ?? 0;
-
+    console.log('Entregas offline pendentes:', this.offlineCounter);
     await this.atualizaOnlineCounter();
     await this.checkCameraSupport();
   }
@@ -158,7 +169,6 @@ export class ValidacaoPage implements OnDestroy {
           beneficio.cpf.replace(/\D/g, '') === codigoLimpo
       );
 
-
       if (checaBeneficio?.situacao === 8) {
 
         this.toastService.showToast({
@@ -179,23 +189,22 @@ export class ValidacaoPage implements OnDestroy {
 
       }
 
-      this.status = await Network.getStatus();
+      const status = await Network.getStatus();
 
-      if (!this.status.connected) {
+      if (!status.connected) {
 
         await this.salvarFoto(codigo);
-
+        checaBeneficio.situacao = 8;
         this.toastService.showToast({
           message: `Entrega salva offline`,
           cssClass: 'toast-success',
         });
-
         return;
 
       }
 
       const obj: BeneficiosDiversos =
-        new BeneficiosDiversos(checaBeneficio[0]);
+        new BeneficiosDiversos(checaBeneficio);
 
       const arquivoEnvio = {
         descricao: 'Foto da Entrega',
@@ -203,8 +212,7 @@ export class ValidacaoPage implements OnDestroy {
         extensao: '.png',
       };
 
-      const arquivo =
-        new ArquivoBeneficio(arquivoEnvio);
+      const arquivo = new ArquivoBeneficio(arquivoEnvio);
 
       const imagem =
         Mentor.rodaTransacaoFromObjeto(
@@ -216,6 +224,7 @@ export class ValidacaoPage implements OnDestroy {
 
       obj.situacao = 8;
       checaBeneficio.situacao = 8;
+
       obj.arquivos = [imagem['ArquivoBeneficio']];
 
       Mentor.rodaTransacaoFromObjeto(
@@ -226,18 +235,25 @@ export class ValidacaoPage implements OnDestroy {
       );
 
       if (!blobFoto) {
-        this.loadingService.dismiss();
+
+        try {
+          await this.loadingService.dismiss();
+        } catch { }
+
         const alerta =
           await this.alertController.create({
             header: 'Foto da Entrega',
             message: 'Realizar foto da entrega',
+            backdropDismiss: false,
             buttons: [
               {
                 text: 'OK',
                 handler: async () => {
+
                   await this.salvarFoto(
                     imagem['ArquivoBeneficio'].codigo
                   );
+
                 },
               },
             ],
@@ -254,16 +270,29 @@ export class ValidacaoPage implements OnDestroy {
         );
 
       }
+
       if (sincroniza) {
+
         this.toastService.showToast({
           message: `Entrega efetuada com sucesso`,
           cssClass: 'toast-success',
         });
+
       }
+
       await this.atualizaOnlineCounter();
+
     } catch (error) {
 
-      throw new Error(`Erro no código ${codigo}`);
+      console.error('Erro ao validar código:', {
+        codigo,
+        erro: error
+      });
+
+      this.toastService.showToast({
+        message: `Erro ao processar código ${codigo}`,
+        cssClass: 'toast-error'
+      });
 
     }
 
@@ -284,8 +313,22 @@ export class ValidacaoPage implements OnDestroy {
 
       try {
 
-        const blob =
-          this.base64ToBlob(entrega.foto);
+        let blob: Blob;
+
+        if (entrega.foto instanceof Blob) {
+
+          blob = entrega.foto;
+
+        } else {
+
+          blob = this.base64ToBlob(entrega.foto);
+
+        }
+
+        console.log('Sincronizando entrega offline:', {
+          codigo: entrega.codigo,
+          tamanhoFoto: blob.size,
+        });
 
         await this.validaCodigoOnline(
           entrega.codigo,
@@ -299,20 +342,18 @@ export class ValidacaoPage implements OnDestroy {
 
       } catch (error) {
 
-        console.error(
-          'Erro sincronizando',
-          entrega
-        );
+        console.error('Erro sincronizando:', {
+          codigo: entrega.codigo,
+          erro: error
+        });
 
       }
 
     }
-
     await this.storageService.setValue(
       StorageKeysEnums.beneficiarioOffline,
       restantes
     );
-
     this.offlineCounter = restantes.length;
     await this.atualizaOnlineCounter();
   }
@@ -354,9 +395,7 @@ export class ValidacaoPage implements OnDestroy {
           StorageKeysEnums.beneficiarioOffline,
           lista
         );
-
         this.offlineCounter = lista.length;
-
         return;
 
       }
@@ -364,6 +403,15 @@ export class ValidacaoPage implements OnDestroy {
       await this.uploadFoto(codigo, blob);
 
     } catch (error) {
+      if (error?.message?.includes('User cancelled')) {
+
+        this.toastService.showToast({
+          message: 'A foto é obrigatória. Tente novamente.',
+          cssClass: 'toast-error'
+        });
+
+        return this.salvarFoto(codigo); // chama novamente
+      }
 
       console.error('Erro salvar foto', error);
 
@@ -411,21 +459,17 @@ export class ValidacaoPage implements OnDestroy {
 
   base64ToBlob(base64: string): Blob {
 
-    const arr = base64.split(',');
-    const mime =
-      arr[0].match(/:(.*?);/)![1];
+    const byteCharacters = atob(base64.split(',')[1]);
 
-    const bstr = atob(arr[1]);
+    const byteNumbers = new Array(byteCharacters.length);
 
-    let n = bstr.length;
-
-    const u8arr = new Uint8Array(n);
-
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
 
-    return new Blob([u8arr], { type: mime });
+    const byteArray = new Uint8Array(byteNumbers);
+
+    return new Blob([byteArray], { type: 'image/png' });
 
   }
 
@@ -440,7 +484,7 @@ export class ValidacaoPage implements OnDestroy {
       );
 
       const parsed = JSON.parse(retorno);
-      console.log('Total entregas diárias:', parsed.totalEntregasDiarias);
+
       this.onlineCounter =
         parsed.totalEntregasDiarias;
 

@@ -80,14 +80,14 @@
           </ion-button>
         </ion-card-content>
       </ion-card>
-      <ion-card class="action-card" *ngIf="offlineCounter > 0">
+      <ion-card class="action-card" *ngIf="offlineCounter !== 0">
         <ion-card-header style="display: flex; flex-direction: row-reverse; justify-content: space-between;  ">
           <ion-icon name="person-circle-outline" class="action-icon"></ion-icon>
           <ion-card-title>Entregas Offline</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <p>Entregas offline aguardando sincronização: {{offlineCounter}}</p>
-          <ion-button [disabled]="status !== null" expand="block" size="large" color="warning"
+          <ion-button [disabled]="status !== true" expand="block" size="large" color="warning"
             (click)="carregarEntregasOffline()">
             <ion-icon slot="start" name="person-circle-outline"></ion-icon>
             Sincronizar entregas
