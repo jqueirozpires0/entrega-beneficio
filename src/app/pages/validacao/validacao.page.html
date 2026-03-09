@@ -14,6 +14,11 @@
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true" class="validacao-content">
+  <ion-refresher slot="fixed" (ionRefresh)="atualizarTela($event)">
+    <ion-refresher-content pullingIcon="arrow-down" pullingText="Puxe para atualizar" refreshingSpinner="circles"
+      refreshingText="Atualizando...">
+    </ion-refresher-content>
+  </ion-refresher>
   <div class="validacao-container">
     <ion-row style="display: none;">
       <ion-col>
@@ -72,6 +77,20 @@
           <ion-button expand="block" size="large" color="warning" (click)="entregaSemCartao()">
             <ion-icon slot="start" name="person-circle-outline"></ion-icon>
             Validar por CPF
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+      <ion-card class="action-card" *ngIf="offlineCounter > 0">
+        <ion-card-header style="display: flex; flex-direction: row-reverse; justify-content: space-between;  ">
+          <ion-icon name="person-circle-outline" class="action-icon"></ion-icon>
+          <ion-card-title>Entregas Offline</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>Entregas offline aguardando sincronização: {{offlineCounter}}</p>
+          <ion-button [disabled]="status !== null" expand="block" size="large" color="warning"
+            (click)="carregarEntregasOffline()">
+            <ion-icon slot="start" name="person-circle-outline"></ion-icon>
+            Sincronizar entregas
           </ion-button>
         </ion-card-content>
       </ion-card>

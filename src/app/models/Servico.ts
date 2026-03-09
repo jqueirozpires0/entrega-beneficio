@@ -10,6 +10,8 @@ export class servico {
     static imagem: String = null;
     static nome: String = null;
 
+    static beneficios: any[] = null;
+
     static dataUltimoAcessoApp : Date = null;
 
     static cras = null;

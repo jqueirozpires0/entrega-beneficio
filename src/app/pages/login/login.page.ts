@@ -162,10 +162,10 @@ export class LoginPage {
       const usuario = Mentor.executaVisao(
         3215,
         'varlogi=' +
-          this.usuario.value?.replace(/\D/g, '') +
-          '&varsenha=' +
-          this.senha.value
-          + '&MwExibeSql=true'
+        this.usuario.value?.replace(/\D/g, '') +
+        '&varsenha=' +
+        this.senha.value
+        + '&MwExibeSql=true'
       );
 
       if (!usuario) {
@@ -173,9 +173,18 @@ export class LoginPage {
         return;
       }
 
+      const listaBeneficios = Mentor.executaVisao(3453, 'varcodigoBeneficio=1235');
+      console.log('retornoJsp', listaBeneficios);
+
+      await this.storageService.setValue(
+        StorageKeysEnums.listaPessoas, listaBeneficios
+      );
+
       await this.storageService.setValue(
         StorageKeysEnums.usuarioLogado, usuario
       );
+
+      servico.beneficios = listaBeneficios;
 
       servico.usuarioLogado = usuario;
 
