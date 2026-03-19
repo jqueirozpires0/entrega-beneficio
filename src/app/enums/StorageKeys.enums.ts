@@ -5,4 +5,5 @@ export enum StorageKeysEnums {
   ENTREGAS_ONLINE_COUNTER = 'entregasOnlineCounter',
   listaPessoas = 'listaPessoas',
   beneficiarioOffline = 'beneficiarioOffline',
+  novosBeneficiariosOffline = 'novosBeneficiariosOffline'
 }

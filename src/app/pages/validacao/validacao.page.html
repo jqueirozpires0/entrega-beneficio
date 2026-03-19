@@ -23,18 +23,19 @@
     <ion-row style="display: none;">
       <ion-col>
         <ion-card id="open-modal">
-          <ion-modal trigger="open-modal">
+          <ion-modal [isOpen]="modalEntregaCpf" (didDismiss)="fecharModalCpf()">
             <ng-template>
               <ion-header>
                 <ion-toolbar>
                   <ion-buttons style="font-size: 30px;" slot="start">
-                    <ion-icon style="color: white;" (click)="cancel()" name="arrow-back-circle-outline"></ion-icon>
-                  </ion-buttons>
-                  <ion-buttons style="font-size: 30px;" slot="end">
-                    <ion-icon style="color: white; pointer-events: none; visibility: hidden;" (click)="cancel()"
+                    <ion-icon style="color: white;" (click)="fecharModalCpf()"
                       name="arrow-back-circle-outline"></ion-icon>
                   </ion-buttons>
-                  <ion-title style="text-align: center;color: white;" class="ion-text-center">Entregas Por
+                  <ion-buttons style="font-size: 30px;" slot="end">
+                    <ion-icon style="color: white; pointer-events: none; visibility: hidden;" (click)="fecharModalCpf()"
+                      name="arrow-back-circle-outline"></ion-icon>
+                  </ion-buttons>
+                  <ion-title style="text-align: center;color: white;" class="ion-text-center">Entregas por
                     CPF</ion-title>
                 </ion-toolbar>
               </ion-header>
@@ -74,26 +75,55 @@
         </ion-card-header>
         <ion-card-content>
           <p>Valide a entrega informando o CPF do beneficiário.</p>
-          <ion-button expand="block" size="large" color="warning" (click)="entregaSemCartao()">
+          <ion-button expand="block" size="large" color="warning" (click)="abrirModalCpf()">
             <ion-icon slot="start" name="person-circle-outline"></ion-icon>
             Validar por CPF
           </ion-button>
         </ion-card-content>
       </ion-card>
-      <ion-card class="action-card" *ngIf="offlineCounter !== 0">
-        <ion-card-header style="display: flex; flex-direction: row-reverse; justify-content: space-between;  ">
-          <ion-icon name="person-circle-outline" class="action-icon"></ion-icon>
-          <ion-card-title>Entregas Offline</ion-card-title>
+      <div style="display: flex;">
+        <ion-card style="width: 100%;" class="action-card" *ngIf="offlineCounter !== 0">
+          <ion-card-header style="display: flex; flex-direction: row-reverse; justify-content: space-between;">
+            <ion-icon name="person-circle-outline" class="action-icon"></ion-icon>
+            <ion-card-title>Entregas offline</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>Entregas offline para sincronizar</p>
+            <ion-button [disabled]="status !== true" expand="block" size="large" color="warning"
+              (click)="carregarEntregasOffline()">
+              <ion-icon slot="start" name="person-circle-outline"></ion-icon>
+              Sincronizar entregas
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+        <!-- <ion-card class="action-card" *ngIf="offlineCounter !== 0">
+          <ion-card-header style="display: flex; flex-direction: row-reverse; justify-content: space-between;  ">
+            <ion-icon name="person-circle-outline" class="action-icon"></ion-icon>
+            <ion-card-title>Novas entregas offline</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>Novos benefícios para sincronização: {{offlineCounter}}</p>
+            <ion-button [disabled]="status !== true" expand="block" size="large" color="warning"
+              (click)="carregarEntregasOffline()">
+              <ion-icon slot="start" name="person-circle-outline"></ion-icon>
+              Sincronizar entregas
+            </ion-button>
+          </ion-card-content>
+        </ion-card> -->
+      </div>
+      <!-- <ion-card class="action-card">
+        <ion-card-header style="display: flex; flex-direction: row-reverse; justify-content: space-between;">
+          <ion-icon name="person-add-outline" class="action-icon"></ion-icon>
+          <ion-card-title>Entrega por Nome e CPF</ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <p>Entregas offline aguardando sincronização: {{offlineCounter}}</p>
-          <ion-button [disabled]="status !== true" expand="block" size="large" color="warning"
-            (click)="carregarEntregasOffline()">
-            <ion-icon slot="start" name="person-circle-outline"></ion-icon>
-            Sincronizar entregas
+          <p>Informe o nome e o CPF do beneficiário para registrar a entrega.</p>
+          <ion-button expand="block" size="large" color="success" (click)="abrirModalNomeCpf()">
+            <ion-icon slot="start" name="person-add-outline"></ion-icon>
+            Criar nova entrega
           </ion-button>
         </ion-card-content>
-      </ion-card>
+      </ion-card> -->
       <ion-card class="status-card">
         <ion-card-header style="display: flex; flex-direction: row-reverse; justify-content: space-between;">
           <ion-icon name="checkmark-circle-outline" class="status-icon"></ion-icon>
@@ -108,4 +138,33 @@
       </ion-card>
     </div>
   </div>
+  <ion-modal [isOpen]="modalEntregaNomeCpf" (didDismiss)="fecharModalNomeCpf()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons style="font-size: 30px;" slot="start">
+            <ion-icon style="color: white;" (click)="fecharModalNomeCpf()" name="arrow-back-circle-outline"></ion-icon>
+          </ion-buttons>
+          <ion-buttons style="font-size: 30px;" slot="end">
+            <ion-icon style="color: white; pointer-events: none; visibility: hidden;" (click)="fecharModalNomeCpf()"
+              name="arrow-back-circle-outline"></ion-icon>
+          </ion-buttons>
+          <ion-title style="text-align: center;color: white;" class="ion-text-center">Nova entrega</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-item>
+          <ion-input [(ngModel)]="nomeInput" placeholder="Nome para entrega"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input placeholder="CPF para Entrega" maxlength="14" [maskito]="cpfMask" [maskitoElement]="maskPredicate"
+            type="tel" [(ngModel)]='cpfInput'></ion-input>
+        </ion-item>
+        <ion-button style="--background: #2659a1 !important;width: 100%;margin-top: 50px;"
+          (click)="entregarPorNomeCpf()">
+          Confirmar Entrega
+        </ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>

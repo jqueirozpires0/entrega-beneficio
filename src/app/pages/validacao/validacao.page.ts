@@ -20,12 +20,15 @@ import { Network } from '@capacitor/network';
 export class ValidacaoPage implements OnDestroy {
 
   isCameraSupported = true;
-
+  nomeInput: string = '';
   cpfInput: string = '';
   onlineCounter = 0;
   offlineCounter = 0;
   status = null;
   listaBeneficiarios: any[] = [];
+  beneficiarios: any[] = [];
+  modalEntregaCpf = false;
+  modalEntregaNomeCpf = false;
 
   readonly cpfMask: MaskitoOptions = {
     mask: [
@@ -47,8 +50,6 @@ export class ValidacaoPage implements OnDestroy {
     private navCtrl: NavController,
     private alertController: AlertController
   ) { }
-
-  @ViewChild(IonModal) modal: IonModal;
 
   ngOnDestroy(): void {
     this.scannerService.stopScan();
@@ -74,6 +75,7 @@ export class ValidacaoPage implements OnDestroy {
     this.offlineCounter = entregas?.length ?? 0;
     console.log('Entregas offline pendentes:', this.offlineCounter);
     await this.atualizaOnlineCounter();
+    await this.atualizarOfflineCounter();
     await this.checkCameraSupport();
   }
 
@@ -87,12 +89,119 @@ export class ValidacaoPage implements OnDestroy {
     this.navCtrl.navigateRoot('seleciona-municipio');
   }
 
-  entregaSemCartao() {
-    this.modal.present();
+  abrirModalCpf() {
+    this.cpfInput = '';
+    this.modalEntregaCpf = true;
   }
 
-  cancel() {
-    this.modal.dismiss(null, 'cancelar');
+  abrirModalNomeCpf() {
+    this.cpfInput = '';
+    this.nomeInput = '';
+    this.modalEntregaCpf = false;
+    this.modalEntregaNomeCpf = true;
+  }
+
+  fecharModalCpf() {
+    this.modalEntregaCpf = false;
+  }
+
+  fecharModalNomeCpf() {
+    this.modalEntregaNomeCpf = false;
+    this.nomeInput = '';
+    this.cpfInput = '';
+  }
+
+  async entregarPorNomeCpf() {
+    if (!this.nomeInput || !this.cpfInput) {
+      this.toastService.showToast({ message: 'Preencha nome e CPF.' });
+      return;
+    }
+    try {
+      await this.loadingService.present();
+      const status = await Network.getStatus();
+
+      if (!status.connected) {
+        this.loadingService.dismiss();
+        await this.armazenarBeneficiariosLocalmente(this.nomeInput, this.cpfInput);
+        return;
+      }
+      await this.novaEntregaPorNomeCpf(this.nomeInput, this.cpfInput);
+      this.toastService.showToast({ message: 'Entrega efetuada com sucesso', cssClass: 'toast-success' });
+      this.modalEntregaNomeCpf = false;
+      this.nomeInput = '';
+      this.cpfInput = '';
+      await this.atualizaOnlineCounter();
+      await this.atualizarOfflineCounter();
+    } catch (error) {
+      this.toastService.showToast({ message: 'Erro ao entregar benefício', cssClass: 'toast-error' });
+    } finally {
+      await this.loadingService.dismiss();
+    }
+  }
+
+  async novaEntregaPorNomeCpf(nome: string, cpf: string, base64?: string) {
+    const obj: BeneficiosDiversos = new BeneficiosDiversos(null);
+    obj.codigo = 0;
+    obj.situacao = 8;
+    obj.cpf = cpf;
+    obj.nome = nome;
+    obj.tipoBeneficio.codigo = 1235;
+
+    const arquivoEnvio = {
+      descricao: 'Foto da Entrega',
+      flagUpoload: 1,
+      extensao: '.png',
+    };
+
+    const arquivo = new ArquivoBeneficio(arquivoEnvio);
+
+    const imagem =
+      Mentor.rodaTransacaoFromObjeto(
+        2009,
+        'objArquivoBeneficio',
+        arquivo,
+        true
+      );
+
+    obj.arquivos = [imagem['ArquivoBeneficio']];
+
+    this.listaBeneficiarios.push({
+      nome,
+      cpf,
+      situacao: 8
+    });
+
+    Mentor.rodaTransacaoFromObjeto(
+      2008,
+      'objEntregaBeneficioDiverso',
+      obj,
+      true
+    );
+
+    await this.loadingService.dismiss();
+
+    if (!base64 || base64 == '' || base64 == null) {
+      const alerta =
+        await this.alertController.create({
+          header: 'Foto da Entrega',
+          message: 'Realizar foto da entrega',
+          backdropDismiss: false,
+          buttons: [
+            {
+              text: 'OK',
+              handler: async () => {
+                await this.salvarFoto(
+                  imagem['ArquivoBeneficio'].codigo
+                );
+
+              },
+            },
+          ],
+        });
+
+      await alerta.present();
+      await alerta.onDidDismiss();
+    }
   }
 
   async checkCameraSupport() {
@@ -110,7 +219,7 @@ export class ValidacaoPage implements OnDestroy {
 
     } finally {
 
-      this.loadingService.dismiss();
+      await this.loadingService.dismiss();
 
     }
 
@@ -150,9 +259,7 @@ export class ValidacaoPage implements OnDestroy {
     } catch (error) {
       this.toastService.showToast({ message: error });
     } finally {
-      this.loadingService.dismiss();
-      this.cpfInput = '';
-      this.modal.dismiss(null, 'cancelar');
+      await this.loadingService.dismiss();
     }
   }
 
@@ -180,10 +287,29 @@ export class ValidacaoPage implements OnDestroy {
       }
 
       if (!checaBeneficio) {
+        await this.loadingService.dismiss();
+        const alerta =
+          await this.alertController.create({
+            header: 'Usuário não listado',
+            message: 'Usuário não está na lista de beneficiários, deseja realizar a entrega mesmo assim?',
+            backdropDismiss: false,
+            buttons: [
+              {
+                text: 'OK',
+                handler: async () => {
+                  this.fecharModalCpf();
+                  this.abrirModalNomeCpf();
+                },
+              },
+              {
+                text: 'Cancelar',
+                role: 'cancel',
+              },
+            ],
+          });
 
-        this.toastService.showToast({
-          message: `Usuário não encontrado - ${codigo}`,
-        });
+        await alerta.present();
+        await alerta.onDidDismiss();
 
         return;
 
@@ -281,6 +407,7 @@ export class ValidacaoPage implements OnDestroy {
       }
 
       await this.atualizaOnlineCounter();
+      await this.atualizarOfflineCounter();
 
     } catch (error) {
 
@@ -299,7 +426,7 @@ export class ValidacaoPage implements OnDestroy {
   }
 
   async carregarEntregasOffline() {
-
+    this.criarNovosBeneficiariosLocalmente();
     const entregas =
       (await this.storageService.getValue<any[]>(
         StorageKeysEnums.beneficiarioOffline
@@ -324,11 +451,6 @@ export class ValidacaoPage implements OnDestroy {
           blob = this.base64ToBlob(entrega.foto);
 
         }
-
-        console.log('Sincronizando entrega offline:', {
-          codigo: entrega.codigo,
-          tamanhoFoto: blob.size,
-        });
 
         await this.validaCodigoOnline(
           entrega.codigo,
@@ -356,6 +478,7 @@ export class ValidacaoPage implements OnDestroy {
     );
     this.offlineCounter = restantes.length;
     await this.atualizaOnlineCounter();
+    await this.atualizarOfflineCounter();
   }
 
   async salvarFoto(codigo: string) {
@@ -473,6 +596,20 @@ export class ValidacaoPage implements OnDestroy {
 
   }
 
+  async atualizarOfflineCounter() {
+    const entregas =
+      (await this.storageService.getValue<any[]>(
+        StorageKeysEnums.beneficiarioOffline
+      )) ?? [];
+
+    const novos =
+      (await this.storageService.getValue<any[]>(
+        StorageKeysEnums.novosBeneficiariosOffline
+      )) ?? [];
+
+    this.offlineCounter = entregas.length + novos.length;
+  }
+
   async atualizaOnlineCounter() {
 
     try {
@@ -496,4 +633,91 @@ export class ValidacaoPage implements OnDestroy {
 
   }
 
+  async armazenarBeneficiariosLocalmente(nome: string, cpf: string) {
+    const alerta =
+      await this.alertController.create({
+        header: 'Foto da Entrega',
+        message: 'Realizar foto da entrega',
+        backdropDismiss: false,
+        buttons: [
+          {
+            text: 'OK',
+            handler: async () => { },
+          },
+        ],
+      });
+
+    await alerta.present();
+    await alerta.onDidDismiss();
+
+    const cameraResults: Photo =
+      await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+      });
+
+    const response =
+      await fetch(cameraResults.webPath!);
+
+    const blob = await response.blob();
+
+    const base64 =
+      await this.blobToBase64(blob);
+
+    const novosBeneficiarios = {
+      nome,
+      cpf,
+      foto: base64
+    };
+
+    this.beneficiarios.push(novosBeneficiarios);
+    await this.storageService.setValue(
+      StorageKeysEnums.novosBeneficiariosOffline,
+      this.beneficiarios
+    );
+    this.offlineCounter = this.offlineCounter + 1;
+    await this.toastService.showToast({
+      message: 'Beneficiário armazenado localmente',
+      cssClass: 'toast-success'
+    });
+  }
+
+  async criarNovosBeneficiariosLocalmente() {
+    const lista =
+      (await this.storageService.getValue<any[]>(
+        StorageKeysEnums.novosBeneficiariosOffline
+      )) ?? [];
+
+    if (!lista.length) return;
+
+    let restantes = [...lista];
+
+    for (const beneficiario of lista) {
+      try {
+        await this.novaEntregaPorNomeCpf(
+          beneficiario.nome,
+          beneficiario.cpf,
+          beneficiario.foto
+        );
+
+        restantes = restantes.filter(
+          (b) =>
+            b.cpf !== beneficiario.cpf ||
+            b.nome !== beneficiario.nome
+        );
+
+      } catch (error) {
+        console.error('Erro ao sincronizar beneficiário:', beneficiario, error);
+      }
+    }
+
+    await this.storageService.setValue(
+      StorageKeysEnums.novosBeneficiariosOffline,
+      restantes
+    );
+
+    await this.atualizarOfflineCounter();
+  }
 }

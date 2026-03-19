@@ -5,7 +5,7 @@ import { LoadingController, LoadingOptions } from '@ionic/angular';
   providedIn: 'root',
 })
 export class LoadingService {
-  constructor(private loadingCtrl: LoadingController) {}
+  constructor(private loadingCtrl: LoadingController) { }
 
   async present(props?: LoadingOptions): Promise<void> {
     const loading = await this.loadingCtrl.create({
@@ -17,7 +17,11 @@ export class LoadingService {
     await loading.present();
   }
 
-  dismiss(): void {
-    this.loadingCtrl.dismiss();
+  async dismiss(): Promise<void> {
+    const top = await this.loadingCtrl.getTop();
+
+    if (top) {
+      await top.dismiss();
+    }
   }
 }
