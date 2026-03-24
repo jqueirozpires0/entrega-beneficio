@@ -29,7 +29,6 @@ type IFormType = {
 export class LoginPage {
 
   loginForm: FormGroup;
-
   usuarioLogado: any = null;
 
   logo = '';
@@ -82,8 +81,8 @@ export class LoginPage {
   }
 
   async ionViewDidEnter() {
-    await this.recuperaUsuarioLogado();
     await this.recuperaLicenca();
+    await this.recuperaUsuarioLogado();
   }
 
   async trocaMunicipio() {
@@ -174,10 +173,15 @@ export class LoginPage {
       }
 
       const listaBeneficios = Mentor.executaVisao(3453, 'varcodigoBeneficio=1235');
-      console.log('retornoJsp', listaBeneficios);
 
       await this.storageService.setValue(
         StorageKeysEnums.listaPessoas, listaBeneficios
+      );
+
+      const listaBairros = Mentor.executaVisao(424, '');
+
+      await this.storageService.setValue(
+        StorageKeysEnums.listaBairros, listaBairros
       );
 
       await this.storageService.setValue(

@@ -3,7 +3,7 @@ ion-list {
 }
 
 ion-button {
-  --background: linear-gradient(to top, #fe9634, #fe6b34) !important;
+  --background: linear-gradient(135deg, #2659a1 0%, #3880e5 100%) !important;
   --background-hover: transparent !important;
   --background-activated: transparent !important;
   --background-focused: transparent !important;
@@ -32,7 +32,7 @@ ion-item {
 }
 
 .toast-success {
-  --background: linear-gradient(to top, #fe9634, #fe6b34) !important;
+  --background: linear-gradient(135deg, #2659a1 0%, #3880e5 100%) !important;
   --color: white !important;
   --button-color: #ffff;
   font-weight: bold;

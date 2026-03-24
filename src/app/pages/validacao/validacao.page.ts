@@ -1,14 +1,13 @@
-import { Component, OnDestroy, ViewChild } from '@angular/core';
-import { AlertController, IonModal, NavController } from '@ionic/angular';
+import { Component, OnDestroy } from '@angular/core';
+import { AlertController, NavController } from '@ionic/angular';
 import { MaskitoElementPredicate, MaskitoOptions } from '@maskito/core';
 import { Mentor } from 'src/app/models/Mentor';
-import { ArquivoBeneficio, BeneficiosDiversos } from 'src/app/models/Modelo';
+import { ArquivoBeneficio, Bairro, BeneficiosDiversos } from 'src/app/models/Modelo';
 import { LoadingService } from 'src/app/shared/services/loading/loading.service';
 import { ScannerService } from 'src/app/shared/services/scanner/scanner.service';
 import { StorageService } from 'src/app/shared/services/storage/storage.service';
 import { ToastService } from 'src/app/shared/services/toast/toast.service';
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
-import { servico } from 'src/app/models/Servico';
 import { StorageKeysEnums } from 'src/app/enums/StorageKeys.enums';
 import { Network } from '@capacitor/network';
 
@@ -24,8 +23,10 @@ export class ValidacaoPage implements OnDestroy {
   cpfInput: string = '';
   onlineCounter = 0;
   offlineCounter = 0;
+  bairro = 0;
   status = null;
   listaBeneficiarios: any[] = [];
+  listaBairros: any[] = [];
   beneficiarios: any[] = [];
   modalEntregaCpf = false;
   modalEntregaNomeCpf = false;
@@ -57,15 +58,17 @@ export class ValidacaoPage implements OnDestroy {
 
   async ionViewDidEnter() {
     const status = await Network.getStatus();
-    console.log(this.listaBeneficiarios, 'ANTES DA VERIFICAÇÃO DE REDE');
     if (status.connected === true) {
       this.listaBeneficiarios = Mentor.executaVisao(3453, 'varcodigoBeneficio=1235');
+      this.listaBairros = Mentor.executaVisao(424, '');
     } else {
+      this.listaBairros = (await this.storageService.getValue<any[]>(
+        StorageKeysEnums.listaBairros
+      )) ?? [];
       this.listaBeneficiarios = (await this.storageService.getValue<any[]>(
         StorageKeysEnums.listaPessoas
       )) ?? [];
     }
-    console.log(this.listaBeneficiarios, 'DEPOIS DA VERIFICAÇÃO DE REDE');
     const entregas =
       await this.storageService.getValue<any[]>(
         StorageKeysEnums.beneficiarioOffline
@@ -73,7 +76,7 @@ export class ValidacaoPage implements OnDestroy {
     this.status = status.connected;
 
     this.offlineCounter = entregas?.length ?? 0;
-    console.log('Entregas offline pendentes:', this.offlineCounter);
+
     await this.atualizaOnlineCounter();
     await this.atualizarOfflineCounter();
     await this.checkCameraSupport();
@@ -97,6 +100,7 @@ export class ValidacaoPage implements OnDestroy {
   abrirModalNomeCpf() {
     this.cpfInput = '';
     this.nomeInput = '';
+    this.bairro = null;
     this.modalEntregaCpf = false;
     this.modalEntregaNomeCpf = true;
   }
@@ -122,10 +126,10 @@ export class ValidacaoPage implements OnDestroy {
 
       if (!status.connected) {
         this.loadingService.dismiss();
-        await this.armazenarBeneficiariosLocalmente(this.nomeInput, this.cpfInput);
+        await this.armazenarBeneficiariosLocalmente(this.nomeInput, this.cpfInput, this.bairro);
         return;
       }
-      await this.novaEntregaPorNomeCpf(this.nomeInput, this.cpfInput);
+      await this.novaEntregaPorNomeCpf(this.nomeInput, this.cpfInput, null, this.bairro);
       this.toastService.showToast({ message: 'Entrega efetuada com sucesso', cssClass: 'toast-success' });
       this.modalEntregaNomeCpf = false;
       this.nomeInput = '';
@@ -139,14 +143,14 @@ export class ValidacaoPage implements OnDestroy {
     }
   }
 
-  async novaEntregaPorNomeCpf(nome: string, cpf: string, base64?: string) {
+  async novaEntregaPorNomeCpf(nome: string, cpf: string, base64?: string, bairro?: number) {
     const obj: BeneficiosDiversos = new BeneficiosDiversos(null);
     obj.codigo = 0;
     obj.situacao = 8;
     obj.cpf = cpf;
+    obj.bairro_novo.codigo = bairro
     obj.nome = nome;
     obj.tipoBeneficio.codigo = 1235;
-
     const arquivoEnvio = {
       descricao: 'Foto da Entrega',
       flagUpoload: 1,
@@ -202,6 +206,14 @@ export class ValidacaoPage implements OnDestroy {
       await alerta.present();
       await alerta.onDidDismiss();
     }
+
+    if (base64) {
+      let blob: Blob;
+      blob = this.base64ToBlob(base64);
+      await this.uploadFoto(imagem['ArquivoBeneficio'].codigo, blob)
+    }
+
+
   }
 
   async checkCameraSupport() {
@@ -426,7 +438,7 @@ export class ValidacaoPage implements OnDestroy {
   }
 
   async carregarEntregasOffline() {
-    this.criarNovosBeneficiariosLocalmente();
+    await this.criarNovosBeneficiariosLocalmente();
     const entregas =
       (await this.storageService.getValue<any[]>(
         StorageKeysEnums.beneficiarioOffline
@@ -437,11 +449,9 @@ export class ValidacaoPage implements OnDestroy {
     let restantes = [...entregas];
 
     for (const entrega of entregas) {
-
       try {
 
         let blob: Blob;
-
         if (entrega.foto instanceof Blob) {
 
           blob = entrega.foto;
@@ -451,27 +461,26 @@ export class ValidacaoPage implements OnDestroy {
           blob = this.base64ToBlob(entrega.foto);
 
         }
-
         await this.validaCodigoOnline(
           entrega.codigo,
           true,
           blob
         );
-
         restantes = restantes.filter(
           (e) => e.codigo !== entrega.codigo
         );
 
       } catch (error) {
 
-        console.error('Erro sincronizando:', {
-          codigo: entrega.codigo,
-          erro: error
-        });
+        await this.toastService.showToast({
+          message: 'Erro na sincronização',
+          cssClass: 'toast-error'
+        })
 
       }
 
     }
+    await this.toastService.showToast({ message: 'Entregas sincronizadas', cssClass: 'toast-success' })
     await this.storageService.setValue(
       StorageKeysEnums.beneficiarioOffline,
       restantes
@@ -533,7 +542,7 @@ export class ValidacaoPage implements OnDestroy {
           cssClass: 'toast-error'
         });
 
-        return this.salvarFoto(codigo); // chama novamente
+        return this.salvarFoto(codigo);
       }
 
       console.error('Erro salvar foto', error);
@@ -633,7 +642,7 @@ export class ValidacaoPage implements OnDestroy {
 
   }
 
-  async armazenarBeneficiariosLocalmente(nome: string, cpf: string) {
+  async armazenarBeneficiariosLocalmente(nome: string, cpf: string, bairro: number) {
     const alerta =
       await this.alertController.create({
         header: 'Foto da Entrega',
@@ -642,7 +651,8 @@ export class ValidacaoPage implements OnDestroy {
         buttons: [
           {
             text: 'OK',
-            handler: async () => { },
+            handler: async () => {
+            },
           },
         ],
       });
@@ -669,7 +679,8 @@ export class ValidacaoPage implements OnDestroy {
     const novosBeneficiarios = {
       nome,
       cpf,
-      foto: base64
+      foto: base64,
+      bairro: bairro
     };
 
     this.beneficiarios.push(novosBeneficiarios);
@@ -677,7 +688,6 @@ export class ValidacaoPage implements OnDestroy {
       StorageKeysEnums.novosBeneficiariosOffline,
       this.beneficiarios
     );
-    this.offlineCounter = this.offlineCounter + 1;
     await this.toastService.showToast({
       message: 'Beneficiário armazenado localmente',
       cssClass: 'toast-success'
@@ -699,7 +709,8 @@ export class ValidacaoPage implements OnDestroy {
         await this.novaEntregaPorNomeCpf(
           beneficiario.nome,
           beneficiario.cpf,
-          beneficiario.foto
+          beneficiario.foto,
+          beneficiario.bairro
         );
 
         restantes = restantes.filter(
@@ -712,6 +723,11 @@ export class ValidacaoPage implements OnDestroy {
         console.error('Erro ao sincronizar beneficiário:', beneficiario, error);
       }
     }
+
+    await this.toastService.showToast({
+      message: 'Novos benefícios sincronizados na plataforma',
+      cssClass: 'toast-success'
+    })
 
     await this.storageService.setValue(
       StorageKeysEnums.novosBeneficiariosOffline,

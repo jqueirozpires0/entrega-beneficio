@@ -340,6 +340,7 @@ export class BeneficiosDiversos extends ionicClasseBase {
 
 	public arquivos: ArquivoBeneficio[];
 	public tipoBeneficio: TipoBeneficio;
+	public bairro_novo: Bairro;
 
 	public listaAtributosKodefy: Array<string> = 'codigo#dataAlteracao#nome#cpf#situacao#'.split('#');
 	constructor(objeto: any) {
@@ -378,6 +379,9 @@ export class BeneficiosDiversos extends ionicClasseBase {
 			if (objeto.tipoBeneficio != null)
 				this.tipoBeneficio = new TipoBeneficio(objeto.tipoBeneficio);
 
+			if (objeto.bairro_novo != null)
+				this.bairro_novo = new Bairro(objeto.bairro_novo);
+
 		}
 		else {
 			if ((objeto) == 'null') {
@@ -398,6 +402,7 @@ export class BeneficiosDiversos extends ionicClasseBase {
 				this.situacao = 0;
 				this.situacao_ = '0';
 				this.tipoBeneficio = new TipoBeneficio('null');
+				this.bairro_novo = new Bairro('null');
 
 			}
 		}
@@ -803,57 +808,112 @@ export class Funcionarios extends ionicClasseBase {
 
 
 export class TipoBeneficio extends ionicClasseBase {
-public static mentorNomeClasse = 'br.com.assistenciaSocial.beans.TipoBeneficio';
+	public static mentorNomeClasse = 'br.com.assistenciaSocial.beans.TipoBeneficio';
 
-	static criaColecao(lista: any){
-		if(lista!=null){
+	static criaColecao(lista: any) {
+		if (lista != null) {
 			var retorno = new Array();
-			for(let x = 0;x<lista.length;x++)
+			for (let x = 0; x < lista.length; x++)
 				retorno.push(new TipoBeneficio(lista[x]));
 			return retorno;
 		}
 	}
 
-		public codigo : number = 0 ;
-		public codigo_ : String ;
-		get codigoSimNao(){ if (this.codigo == 1) return true; else return false;}
-		set codigoSimNao(flag){ if (flag) this.codigo = 1; else this.codigo = 0;}
-		get codigoFormatado(): String {
-			return (this.codigo_)
-		}
-		set codigoFormatado(valor: String) {
-			this.codigo_ =  (valor);
-			if(replaceAll(valor," ","") != "")
-				this.codigo =  Mentor.stringToMoeda(valor);
-		}
+	public codigo: number = 0;
+	public codigo_: String;
+	get codigoSimNao() { if (this.codigo == 1) return true; else return false; }
+	set codigoSimNao(flag) { if (flag) this.codigo = 1; else this.codigo = 0; }
+	get codigoFormatado(): String {
+		return (this.codigo_)
+	}
+	set codigoFormatado(valor: String) {
+		this.codigo_ = (valor);
+		if (replaceAll(valor, " ", "") != "")
+			this.codigo = Mentor.stringToMoeda(valor);
+	}
 
-public listaAtributosKodefy: Array<string> ='codigo#'.split('#');
-		constructor(objeto:any){
+	public listaAtributosKodefy: Array<string> = 'codigo#'.split('#');
+	constructor(objeto: any) {
 		super();
-		if(objeto != null && objeto != 'null'){
-if(typeof(objeto.ionicFlagNovo) == 'undefined') this.ionicFlagNovo = false; else this.ionicFlagNovo = objeto.ionicFlagNovo;
-this.idApp = objeto.idApp;
-this.nomeApp = objeto.nomeApp;
-			 this.codigo = objeto.codigo;
-			 this.codigo_ = Mentor.intToString(this.codigo);
+		if (objeto != null && objeto != 'null') {
+			if (typeof (objeto.ionicFlagNovo) == 'undefined') this.ionicFlagNovo = false; else this.ionicFlagNovo = objeto.ionicFlagNovo;
+			this.idApp = objeto.idApp;
+			this.nomeApp = objeto.nomeApp;
+			this.codigo = objeto.codigo;
+			this.codigo_ = Mentor.intToString(this.codigo);
 
 		}
-		else{
-		if((objeto) == 'null'){
-this.ionicFlagNovo = true;
-			 this.codigo = 0;
-			 this.codigo_ = '0';
+		else {
+			if ((objeto) == 'null') {
+				this.ionicFlagNovo = true;
+				this.codigo = 0;
+				this.codigo_ = '0';
 
-			}else{
-this.ionicFlagNovo = true;
-			 this.codigo = 0;
-			 this.codigo_ = '0';
+			} else {
+				this.ionicFlagNovo = true;
+				this.codigo = 0;
+				this.codigo_ = '0';
 
-		}
 			}
+		}
 
+
+	}
+
+}
+
+export class Bairro extends ionicClasseBase {
+	public static mentorNomeClasse = 'br.com.acesso.beans.Bairro';
+
+	static criaColecao(lista: any) {
+		if (lista != null) {
+			var retorno = new Array();
+			for (let x = 0; x < lista.length; x++)
+				retorno.push(new Bairro(lista[x]));
+			return retorno;
+		}
+	}
+
+	public codigo: number = 0;
+	public codigo_: String;
+	get codigoSimNao() { if (this.codigo == 1) return true; else return false; }
+	set codigoSimNao(flag) { if (flag) this.codigo = 1; else this.codigo = 0; }
+	get codigoFormatado(): String {
+		return (this.codigo_)
+	}
+	set codigoFormatado(valor: String) {
+		this.codigo_ = (valor);
+		if (replaceAll(valor, " ", "") != "")
+			this.codigo = Mentor.stringToMoeda(valor);
+	}
+
+	public listaAtributosKodefy: Array<string> = 'codigo#'.split('#');
+	constructor(objeto: any) {
+		super();
+		if (objeto != null && objeto != 'null') {
+			if (typeof (objeto.ionicFlagNovo) == 'undefined') this.ionicFlagNovo = false; else this.ionicFlagNovo = objeto.ionicFlagNovo;
+			this.idApp = objeto.idApp;
+			this.nomeApp = objeto.nomeApp;
+			this.codigo = objeto.codigo;
+			this.codigo_ = Mentor.intToString(this.codigo);
 
 		}
+		else {
+			if ((objeto) == 'null') {
+				this.ionicFlagNovo = true;
+				this.codigo = 0;
+				this.codigo_ = '0';
+
+			} else {
+				this.ionicFlagNovo = true;
+				this.codigo = 0;
+				this.codigo_ = '0';
+
+			}
+		}
+
+
+	}
 
 }
 

@@ -16,12 +16,12 @@ const routes: Routes = [
   },
   {
     path: 'login',
-    loadChildren: () => import('./pages/login/login.module').then( m => m.LoginPageModule)
+    loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule)
   },
   {
     path: 'validacao',
-    loadChildren: () => import('./pages/validacao/validacao.module').then( m => m.ValidacaoPageModule)
-  },
+    loadChildren: () => import('./pages/validacao/validacao.module').then(m => m.ValidacaoPageModule)
+  }
 ];
 
 @NgModule({
@@ -30,4 +30,4 @@ const routes: Routes = [
   ],
   exports: [RouterModule],
 })
-export class AppRoutingModule {}
+export class AppRoutingModule { }
