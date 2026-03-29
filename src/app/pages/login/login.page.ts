@@ -119,7 +119,7 @@ export class LoginPage {
       );
 
       Mentor.UrlRequest = licencaAtual.url;
-
+      console.log(Mentor.UrlRequest);
       this.logo = licencaAtual.logo as string;
 
       await this.storageService.setValue(

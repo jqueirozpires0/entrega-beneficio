@@ -89,27 +89,6 @@ export class EntregasBeneficiosDiversos extends ionicClasseBase {
 		this.dataCriacao_ = Mentor.dateToString(this.dataCriacao);
 	}
 
-	public dataAlteracao: Date = null;
-	public dataAlteracao_: String;
-	get dataAlteracaoFormatado(): String {
-		if (typeof (this.dataAlteracao) != 'undefined' && this.dataAlteracao != null)
-			return Mentor.dateToString(this.dataAlteracao);
-		else
-			return '';
-	}
-	set dataAlteracaoFormatado(valor: String) {
-		this.dataAlteracao_ = valor;
-		if (replaceAll(this.dataAlteracao_, "_", "").length == 10)
-			this.dataAlteracao = Mentor.stringToDate(valor);
-	}
-	get dataAlteracaoFormatadoIso(): String {
-		return Mentor.dateToStringIso(this.dataAlteracao)
-	}
-	set dataAlteracaoFormatadoIso(valor: String) {
-		this.dataAlteracao = Mentor.stringToDateIso(valor);
-		this.dataAlteracao_ = Mentor.dateToString(this.dataAlteracao);
-	}
-
 	public dataPagamento: Date = null;
 	public dataPagamento_: String;
 	get dataPagamentoFormatado(): String {
@@ -155,7 +134,7 @@ export class EntregasBeneficiosDiversos extends ionicClasseBase {
 	public usuarioCriacao: Funcionarios;
 	public usuarioAlteracao: Funcionarios;
 
-	public listaAtributosKodefy: Array<string> = 'codigo#dataCriacao#dataAlteracao#dataPagamento#taxa#flagEntregue#'.split('#');
+	public listaAtributosKodefy: Array<string> = 'codigo#dataCriacao#dataCriacao#dataPagamento#taxa#flagEntregue#'.split('#');
 	constructor(objeto: any) {
 		super();
 		if (objeto != null && objeto != 'null') {
@@ -178,19 +157,19 @@ export class EntregasBeneficiosDiversos extends ionicClasseBase {
 				this.dataCriacao = Mentor.stringToDate(objeto.dataCriacaoFormatado);
 				this.dataCriacao_ = (objeto.dataCriacaoFormatado);
 			}
-			if (typeof (objeto.dataAlteracao_) != 'undefined') {
+			if (typeof (objeto.dataCriacao_) != 'undefined') {
 				try {
-					this.dataAlteracao_ = objeto.dataAlteracao_;
-					this.dataAlteracao = Mentor.stringToDate(objeto.dataAlteracao_);
-					this.dataAlteracaoFormatado = (objeto.dataAlteracao_);
+					this.dataCriacao_ = objeto.dataCriacao_;
+					this.dataCriacao = Mentor.stringToDate(objeto.dataCriacao_);
+					this.dataCriacaoFormatado = (objeto.dataCriacao_);
 				} catch (err) {
 					alert(err);
 					throw err;
 				}
 			}
 			else {
-				this.dataAlteracao = Mentor.stringToDate(objeto.dataAlteracaoFormatado);
-				this.dataAlteracao_ = (objeto.dataAlteracaoFormatado);
+				this.dataCriacao = Mentor.stringToDate(objeto.dataCriacaoFormatado);
+				this.dataCriacao_ = (objeto.dataCriacaoFormatado);
 			}
 			if (typeof (objeto.dataPagamento_) != 'undefined') {
 				try {
@@ -228,8 +207,8 @@ export class EntregasBeneficiosDiversos extends ionicClasseBase {
 				this.codigo_ = '0';
 				this.dataCriacao = new Date();
 				this.dataCriacao_ = (this.dataCriacaoFormatado);
-				this.dataAlteracao = new Date();
-				this.dataAlteracao_ = (this.dataAlteracaoFormatado);
+				this.dataCriacao = new Date();
+				this.dataCriacao_ = (this.dataCriacaoFormatado);
 				this.dataPagamento = new Date();
 				this.dataPagamento_ = (this.dataPagamentoFormatado);
 				this.taxa = 0;
@@ -251,8 +230,8 @@ export class EntregasBeneficiosDiversos extends ionicClasseBase {
 				this.codigo_ = '0';
 				this.dataCriacao = new Date();
 				this.dataCriacao_ = (this.dataCriacaoFormatado);
-				this.dataAlteracao = new Date();
-				this.dataAlteracao_ = (this.dataAlteracaoFormatado);
+				this.dataCriacao = new Date();
+				this.dataCriacao_ = (this.dataCriacaoFormatado);
 				this.dataPagamento = new Date();
 				this.dataPagamento_ = (this.dataPagamentoFormatado);
 				this.taxa = 0;
@@ -331,6 +310,27 @@ export class BeneficiosDiversos extends ionicClasseBase {
 	public cpf: String = '';
 	public cpf_: String;
 
+	public dataEntrega: Date = null;
+	public dataEntrega_: String;
+	get dataEntregaFormatado(): String {
+		if (typeof (this.dataEntrega) != 'undefined' && this.dataEntrega != null)
+			return Mentor.dateToString(this.dataEntrega);
+		else
+			return '';
+	}
+	set dataEntregaFormatado(valor: String) {
+		this.dataEntrega_ = valor;
+		if (replaceAll(this.dataEntrega_, "_", "").length == 10)
+			this.dataEntrega = Mentor.stringToDate(valor);
+	}
+	get dataEntregaFormatadoIso(): String {
+		return Mentor.dateToStringIso(this.dataEntrega)
+	}
+	set dataEntregaFormatadoIso(valor: String) {
+		this.dataEntrega = Mentor.stringToDateIso(valor);
+		this.dataEntrega_ = Mentor.dateToString(this.dataEntrega);
+	}
+
 	public situacao: number = 0;
 	public situacao_: String;
 	get situacaoSimNao() { if (this.situacao == 1) return true; else return false; }
@@ -341,8 +341,9 @@ export class BeneficiosDiversos extends ionicClasseBase {
 	public arquivos: ArquivoBeneficio[];
 	public tipoBeneficio: TipoBeneficio;
 	public bairro_novo: Bairro;
+	public entregador: Funcionarios;
 
-	public listaAtributosKodefy: Array<string> = 'codigo#dataAlteracao#nome#cpf#situacao#'.split('#');
+	public listaAtributosKodefy: Array<string> = 'codigo#dataAlteracao#nome#cpf#dataEntrega#situacao#'.split('#');
 	constructor(objeto: any) {
 		super();
 		if (objeto != null && objeto != 'null') {
@@ -367,6 +368,20 @@ export class BeneficiosDiversos extends ionicClasseBase {
 			}
 			this.nome = objeto.nome;
 			this.cpf = objeto.cpf;
+			if (typeof (objeto.dataEntrega_) != 'undefined') {
+				try {
+					this.dataEntrega_ = objeto.dataEntrega_;
+					this.dataEntrega = Mentor.stringToDate(objeto.dataEntrega_);
+					this.dataEntregaFormatado = (objeto.dataEntrega_);
+				} catch (err) {
+					alert(err);
+					throw err;
+				}
+			}
+			else {
+				this.dataEntrega = Mentor.stringToDate(objeto.dataEntregaFormatado);
+				this.dataEntrega_ = (objeto.dataEntregaFormatado);
+			}
 			this.situacao = objeto.situacao;
 			this.situacao_ = Mentor.intToString(this.situacao);
 			this.arquivos = new Array();
@@ -382,6 +397,9 @@ export class BeneficiosDiversos extends ionicClasseBase {
 			if (objeto.bairro_novo != null)
 				this.bairro_novo = new Bairro(objeto.bairro_novo);
 
+			if (objeto.entregador != null)
+				this.entregador = new Funcionarios(objeto.entregador);
+
 		}
 		else {
 			if ((objeto) == 'null') {
@@ -390,6 +408,8 @@ export class BeneficiosDiversos extends ionicClasseBase {
 				this.codigo_ = '0';
 				this.dataAlteracao = new Date();
 				this.dataAlteracao_ = (this.dataAlteracaoFormatado);
+				this.dataEntrega = new Date();
+				this.dataEntrega_ = (this.dataEntregaFormatado);
 				this.situacao = 0;
 				this.situacao_ = '0';
 
@@ -399,10 +419,13 @@ export class BeneficiosDiversos extends ionicClasseBase {
 				this.codigo_ = '0';
 				this.dataAlteracao = new Date();
 				this.dataAlteracao_ = (this.dataAlteracaoFormatado);
+				this.dataEntrega = new Date();
+				this.dataEntrega_ = (this.dataEntregaFormatado);
 				this.situacao = 0;
 				this.situacao_ = '0';
 				this.tipoBeneficio = new TipoBeneficio('null');
 				this.bairro_novo = new Bairro('null');
+				this.entregador = new Funcionarios('null');
 
 			}
 		}
@@ -419,6 +442,7 @@ export class BeneficiosDiversos extends ionicClasseBase {
 	}
 
 }
+
 
 
 export class ArquivoBeneficio extends ionicClasseBase {
@@ -764,45 +788,57 @@ export class Estado extends ionicClasseBase {
 }
 
 export class Funcionarios extends ionicClasseBase {
+public static mentorNomeClasse = 'br.com.acesso.beans.Funcionarios';
 
-
-	public codigo: number;
-	get codigoFormatado(): String {
-		return Mentor.moedaToString(this.codigo)
+	static criaColecao(lista: any){
+		if(lista!=null){
+			var retorno = new Array();
+			for(let x = 0;x<lista.length;x++)
+				retorno.push(new Funcionarios(lista[x]));
+			return retorno;
+		}
 	}
-	set codigoFormatado(valor: String) {
-		this.codigo = Mentor.stringToMoeda(valor);
-	}
 
-	public logi: String;
+		public codigo : number = 0 ;
+		public codigo_ : String ;
+		get codigoSimNao(){ if (this.codigo == 1) return true; else return false;}
+		set codigoSimNao(flag){ if (flag) this.codigo = 1; else this.codigo = 0;}
+		get codigoFormatado(): String {
+			return (this.codigo_)
+		}
+		set codigoFormatado(valor: String) {
+			this.codigo_ =  (valor);
+			if(replaceAll(valor," ","") != "")
+				this.codigo =  Mentor.stringToMoeda(valor);
+		}
 
-	public nome: String;
-
-	public senha: String;
-
-	public image: String;
-
-
-	constructor(objeto: any) {
+public listaAtributosKodefy: Array<string> ='codigo#'.split('#');
+		constructor(objeto:any){
 		super();
-		if (objeto != null) {
+		if(objeto != null && objeto != 'null'){
+if(typeof(objeto.ionicFlagNovo) == 'undefined') this.ionicFlagNovo = false; else this.ionicFlagNovo = objeto.ionicFlagNovo;
+this.idApp = objeto.idApp;
+this.nomeApp = objeto.nomeApp;
+			 this.codigo = objeto.codigo;
+			 this.codigo_ = Mentor.intToString(this.codigo);
 
-			this.codigo = objeto.codigo;
-			this.logi = objeto.logi;
-			this.nome = objeto.nome;
-			this.senha = objeto.senha;
-			this.image = objeto.image;
+		}
+		else{
+		if((objeto) == 'null'){
+this.ionicFlagNovo = true;
+			 this.codigo = 0;
+			 this.codigo_ = '0';
 
+			}else{
+this.ionicFlagNovo = true;
+			 this.codigo = 0;
+			 this.codigo_ = '0';
+
+		}
+			}
 
 
 		}
-		else {
-
-
-		}
-
-
-	}
 
 }
 

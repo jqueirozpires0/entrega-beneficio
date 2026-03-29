@@ -2,7 +2,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { AlertController, NavController } from '@ionic/angular';
 import { MaskitoElementPredicate, MaskitoOptions } from '@maskito/core';
 import { Mentor } from 'src/app/models/Mentor';
-import { ArquivoBeneficio, Bairro, BeneficiosDiversos } from 'src/app/models/Modelo';
+import { ArquivoBeneficio, Bairro, BeneficiosDiversos, Funcionarios } from 'src/app/models/Modelo';
 import { LoadingService } from 'src/app/shared/services/loading/loading.service';
 import { ScannerService } from 'src/app/shared/services/scanner/scanner.service';
 import { StorageService } from 'src/app/shared/services/storage/storage.service';
@@ -20,6 +20,8 @@ export class ValidacaoPage implements OnDestroy {
 
   isCameraSupported = true;
   nomeInput: string = '';
+  responsavelLeitura: any = null;
+  usuarioLogado: Funcionarios = null;
   cpfInput: string = '';
   onlineCounter = 0;
   offlineCounter = 0;
@@ -57,6 +59,10 @@ export class ValidacaoPage implements OnDestroy {
   }
 
   async ionViewDidEnter() {
+    await this.loadingService.present()
+    const user = await this.storageService.getValue<any>(StorageKeysEnums.usuarioLogado);
+    this.usuarioLogado = user
+    this.responsavelLeitura = user.codigo;
     const status = await Network.getStatus();
     if (status.connected === true) {
       this.listaBeneficiarios = Mentor.executaVisao(3453, 'varcodigoBeneficio=1235');
@@ -80,10 +86,11 @@ export class ValidacaoPage implements OnDestroy {
     await this.atualizaOnlineCounter();
     await this.atualizarOfflineCounter();
     await this.checkCameraSupport();
+    this.loadingService.dismiss();
   }
 
   async atualizarTela(event: any) {
-    window.location.reload();
+    this.ionViewDidEnter();
     event.target.complete();
   }
 
@@ -113,9 +120,44 @@ export class ValidacaoPage implements OnDestroy {
     this.modalEntregaNomeCpf = false;
     this.nomeInput = '';
     this.cpfInput = '';
+    this.bairro = null;
+  }
+
+  validarCPF(cpf: string): boolean {
+    console.log(cpf, '3')
+    if (!cpf) return false;
+    cpf = cpf.replace(/\D/g, '');
+    if (cpf.length !== 11) return false;
+    if (/^(\d)\1+$/.test(cpf)) return false;
+    let soma = 0;
+    for (let i = 0; i < 9; i++) {
+      soma += Number(cpf.charAt(i)) * (10 - i);
+    }
+
+    let resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+
+    if (resto !== Number(cpf.charAt(9))) return false;
+    soma = 0;
+    for (let i = 0; i < 10; i++) {
+      soma += Number(cpf.charAt(i)) * (11 - i);
+    }
+
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+
+    if (resto !== Number(cpf.charAt(10))) return false;
+
+    return true;
   }
 
   async entregarPorNomeCpf() {
+    var bol = this.validarCPF(this.cpfInput);
+
+    if (!bol) {
+      this.toastService.showToast({ message: 'CPF Inválido.' });
+      return;
+    }
     if (!this.nomeInput || !this.cpfInput) {
       this.toastService.showToast({ message: 'Preencha nome e CPF.' });
       return;
@@ -151,6 +193,8 @@ export class ValidacaoPage implements OnDestroy {
     obj.bairro_novo.codigo = bairro
     obj.nome = nome;
     obj.tipoBeneficio.codigo = 1235;
+    obj.dataEntrega = new Date();
+    obj.entregador = new Funcionarios(this.usuarioLogado)
     const arquivoEnvio = {
       descricao: 'Foto da Entrega',
       flagUpoload: 1,
@@ -174,7 +218,7 @@ export class ValidacaoPage implements OnDestroy {
       cpf,
       situacao: 8
     });
-
+    console.log('1-1', obj)
     Mentor.rodaTransacaoFromObjeto(
       2008,
       'objEntregaBeneficioDiverso',
@@ -240,14 +284,12 @@ export class ValidacaoPage implements OnDestroy {
 
     if (!scannedCode) return;
 
-    const parsedCode = scannedCode.replace('.', '');
-
-    await this.validaCodigo(parsedCode);
+    await this.validaCodigo(scannedCode);
 
   }
 
   async validaCpf() {
-
+    console.log(this.cpfInput, '1')
     if (!this.cpfInput) {
 
       this.toastService.showToast({
@@ -256,6 +298,12 @@ export class ValidacaoPage implements OnDestroy {
 
       return;
 
+    }
+    var bol = this.validarCPF(this.cpfInput);
+
+    if (!bol) {
+      this.toastService.showToast({ message: 'CPF Inválido.' });
+      return;
     }
 
     const cpf = this.cpfInput.replace(/\D/g, '');
@@ -288,6 +336,8 @@ export class ValidacaoPage implements OnDestroy {
           beneficio.cpf.replace(/\D/g, '') === codigoLimpo
       );
 
+      console.log('1',checaBeneficio)
+
       if (checaBeneficio?.situacao === 8) {
 
         this.toastService.showToast({
@@ -297,7 +347,8 @@ export class ValidacaoPage implements OnDestroy {
         return;
 
       }
-
+      console.log('2',checaBeneficio)
+      
       if (!checaBeneficio) {
         await this.loadingService.dismiss();
         const alerta =
@@ -326,11 +377,11 @@ export class ValidacaoPage implements OnDestroy {
         return;
 
       }
-
+      checaBeneficio.entregador = new Funcionarios(this.usuarioLogado)
       const status = await Network.getStatus();
 
       if (!status.connected) {
-
+        
         await this.salvarFoto(codigo);
         checaBeneficio.situacao = 8;
         this.toastService.showToast({
@@ -343,7 +394,8 @@ export class ValidacaoPage implements OnDestroy {
 
       const obj: BeneficiosDiversos =
         new BeneficiosDiversos(checaBeneficio);
-
+      console.log('obj1',obj)
+      obj.dataEntrega = new Date();
       const arquivoEnvio = {
         descricao: 'Foto da Entrega',
         flagUpoload: 1,
@@ -417,7 +469,7 @@ export class ValidacaoPage implements OnDestroy {
         });
 
       }
-
+      this.fecharModalCpf();
       await this.atualizaOnlineCounter();
       await this.atualizarOfflineCounter();
 
@@ -643,6 +695,12 @@ export class ValidacaoPage implements OnDestroy {
   }
 
   async armazenarBeneficiariosLocalmente(nome: string, cpf: string, bairro: number) {
+    var bol = this.validarCPF(this.cpfInput);
+
+    if (!bol) {
+      this.toastService.showToast({ message: 'CPF Inválido.' });
+      return;
+    }
     const alerta =
       await this.alertController.create({
         header: 'Foto da Entrega',
@@ -680,7 +738,8 @@ export class ValidacaoPage implements OnDestroy {
       nome,
       cpf,
       foto: base64,
-      bairro: bairro
+      bairro: bairro,
+      responsavelAlteracao: this.responsavelLeitura.codigo
     };
 
     this.beneficiarios.push(novosBeneficiarios);
@@ -692,6 +751,7 @@ export class ValidacaoPage implements OnDestroy {
       message: 'Beneficiário armazenado localmente',
       cssClass: 'toast-success'
     });
+    this.fecharModalNomeCpf();
   }
 
   async criarNovosBeneficiariosLocalmente() {
