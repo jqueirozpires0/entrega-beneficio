@@ -24,7 +24,7 @@ export class Mentor {
   static mostraSql: boolean;
 
   static UrlRequest: String =
-    'https://treinamento.conectasuas.com.br/assistenciaSocial/';
+    'https://ipojuca.conectasuas.com.br/assistenciaSocial/';
 
   // static UrlRequest:string =  "http://10.10.0.21:8080/netGasV2";
 
@@ -188,7 +188,7 @@ export class Mentor {
 
   static executaTransacaoModulo(modulo, transacao, parametros) {
     let secret = '';
-
+    console.log(transacao);
     //let UrlRequest =  "http://66.147.225.75:8080//tfd";
 
     var lpar = parametros;

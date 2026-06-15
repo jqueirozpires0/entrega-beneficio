@@ -12,6 +12,20 @@ export class StorageService {
       value: JSON.stringify(objectValue),
     });
   }
+  async setValueList(key: StorageKeysEnums, objectValue: any): Promise<void> {
+    let lista = await this.getValue<any[]>(key);
+
+    if (!lista) {
+      lista = [];
+    }
+
+    lista.push(objectValue);
+    await Preferences.set({
+      key,
+      value: JSON.stringify(lista),
+    });
+  }
+
   async getValue<T>(key: StorageKeysEnums): Promise<T> {
     const storedValue = await Preferences.get({ key });
     const parsedObjectValue = JSON.parse(storedValue?.value);

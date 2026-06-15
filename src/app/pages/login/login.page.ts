@@ -8,7 +8,7 @@ import {
 } from '@maskito/core';
 import { StorageKeysEnums } from 'src/app/enums/StorageKeys.enums';
 import { Mentor } from 'src/app/models/Mentor';
-import { licencaMunicipioSistema } from 'src/app/models/Modelo';
+import { licencaMunicipioSistema, TipoBeneficio } from 'src/app/models/Modelo';
 import { servico } from 'src/app/models/Servico';
 import { LoadingService } from 'src/app/shared/services/loading/loading.service';
 import { StorageService } from 'src/app/shared/services/storage/storage.service';
@@ -81,7 +81,6 @@ export class LoginPage {
   }
 
   async ionViewDidEnter() {
-    await this.recuperaLicenca();
     await this.recuperaUsuarioLogado();
   }
 
@@ -91,45 +90,6 @@ export class LoginPage {
       this.storageService.remove();
       this.navCtrl.navigateRoot('seleciona-municipio');
       return;
-    }
-  }
-
-  async recuperaLicenca() {
-    try {
-      await this.loadingService.present();
-
-      const licenca =
-        await this.storageService.getValue<licencaMunicipioSistema>(
-          StorageKeysEnums.licenca
-        );
-
-      Mentor.UrlRequest = 'https://treinamento.conectasuas.com.br/assistenciaSocial/';
-
-      const requestParam = `varcodigoLicenca=${licenca.codigo}`;
-
-      const licencaMunicipiosArray: licencaMunicipioSistema[] =
-        Mentor.executaVisao(2632, requestParam);
-
-      if (!licencaMunicipiosArray?.length) {
-        this.navCtrl.navigateRoot('seleciona-municipio');
-        return;
-      }
-      const licencaAtual = new licencaMunicipioSistema(
-        licencaMunicipiosArray[0]
-      );
-
-      Mentor.UrlRequest = licencaAtual.url;
-      console.log(Mentor.UrlRequest);
-      this.logo = licencaAtual.logo as string;
-
-      await this.storageService.setValue(
-        StorageKeysEnums.licenca,
-        licencaAtual
-      );
-    } catch (error) {
-      console.error(error);
-    } finally {
-      this.loadingService.dismiss();
     }
   }
 
@@ -154,6 +114,8 @@ export class LoginPage {
       await this.loadingService.present();
       const { connected: temInternet } = await Network.getStatus();
 
+      Mentor.UrlRequest = 'https://ipojuca.conectasuas.com.br/assistenciaSocial/';
+
       if (!temInternet && this.usuarioLogado) {
         this.navCtrl.navigateRoot('validacao');
         return;
@@ -172,14 +134,22 @@ export class LoginPage {
         return;
       }
 
-      const listaBeneficios = Mentor.executaVisao(3453, 'varcodigoBeneficio=1235');
-
+      let listaBeneficios = Mentor.executaVisao(3453, 'varcodigoBeneficio=1321');
+      listaBeneficios = listaBeneficios.map(p => ({
+        nome: p.nome,
+        cpf: p.cpf,
+        situacao: p.situacao,
+        bairro: p.bairro,
+        tipoBeneficio: p.tipoBeneficio,
+        codigo: p.codigo
+      }));
+      console.log('listaBeneficios', listaBeneficios);
       await this.storageService.setValue(
         StorageKeysEnums.listaPessoas, listaBeneficios
       );
 
       const listaBairros = Mentor.executaVisao(424, '');
-
+      console.log('listaBairros', listaBairros);
       await this.storageService.setValue(
         StorageKeysEnums.listaBairros, listaBairros
       );
@@ -194,7 +164,8 @@ export class LoginPage {
 
       this.navCtrl.navigateRoot('validacao');
     } catch (error) {
-      this.toastService.showToast({ message: error });
+      this.toastService.showToast({ message: error.message });
+      console.error('Erro ao realizar login', error.message);
     } finally {
       this.loadingService.dismiss();
     }

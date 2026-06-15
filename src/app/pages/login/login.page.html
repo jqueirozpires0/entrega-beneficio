@@ -32,13 +32,7 @@
           </ion-note>
         </ion-list>
         <ion-row style="margin-top: 24px; display: flex; flex-wrap: nowrap;">
-          <ion-col size="6">
-            <ion-button style="width: 100%;" expand="block" color="medium" type="button" (click)="trocaMunicipio()">
-              <ion-icon slot="start" name="swap-horizontal-outline"></ion-icon>
-              Trocar município
-            </ion-button>
-          </ion-col>
-          <ion-col size="6">
+          <ion-col size="12">
             <ion-button style="width: 100%;" expand="block" type="submit"
               [disabled]="loginForm.invalid">
               <ion-icon slot="start" name="log-in-outline"></ion-icon>
@@ -48,8 +42,5 @@
         </ion-row>
       </form>
     </div>
-  </div>
-  <div class="footer-content" style="overflow: hidden;">
-    <img [src]='this.logo' style="width: 100%; max-width: 400px; display: block; margin: 0 auto; object-fit: cover;"/>
   </div>
 </ion-content>

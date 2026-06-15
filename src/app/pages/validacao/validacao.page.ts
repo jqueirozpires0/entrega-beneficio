@@ -65,7 +65,8 @@ export class ValidacaoPage implements OnDestroy {
     this.responsavelLeitura = user.codigo;
     const status = await Network.getStatus();
     if (status.connected === true) {
-      this.listaBeneficiarios = Mentor.executaVisao(3453, 'varcodigoBeneficio=1235');
+      this.listaBeneficiarios = Mentor.executaVisao(3453, 'varcodigoBeneficio=1321');
+      console.log('Beneficiarios online', this.listaBeneficiarios);
       this.listaBairros = Mentor.executaVisao(424, '');
     } else {
       this.listaBairros = (await this.storageService.getValue<any[]>(
@@ -85,7 +86,7 @@ export class ValidacaoPage implements OnDestroy {
 
     await this.atualizaOnlineCounter();
     await this.atualizarOfflineCounter();
-    await this.checkCameraSupport();
+    //await this.checkCameraSupport();
     this.loadingService.dismiss();
   }
 
@@ -96,7 +97,7 @@ export class ValidacaoPage implements OnDestroy {
 
   logout() {
     this.storageService.setValue(StorageKeysEnums.usuarioLogado, []);
-    this.navCtrl.navigateRoot('seleciona-municipio');
+    this.navCtrl.navigateRoot('login');
   }
 
   abrirModalCpf() {
@@ -107,20 +108,24 @@ export class ValidacaoPage implements OnDestroy {
   abrirModalNomeCpf() {
     this.cpfInput = '';
     this.nomeInput = '';
-    this.bairro = null;
+    this.bairro = 0;
     this.modalEntregaCpf = false;
     this.modalEntregaNomeCpf = true;
   }
 
   fecharModalCpf() {
     this.modalEntregaCpf = false;
+    this.loadingService.dismiss();
+    this.ionViewDidEnter();
   }
 
   fecharModalNomeCpf() {
     this.modalEntregaNomeCpf = false;
     this.nomeInput = '';
     this.cpfInput = '';
-    this.bairro = null;
+    this.bairro = 0;
+    this.loadingService.dismiss();
+    this.ionViewDidEnter();
   }
 
   validarCPF(cpf: string): boolean {
@@ -151,114 +156,7 @@ export class ValidacaoPage implements OnDestroy {
     return true;
   }
 
-  async entregarPorNomeCpf() {
-    var bol = this.validarCPF(this.cpfInput);
-
-    if (!bol) {
-      this.toastService.showToast({ message: 'CPF Inválido.' });
-      return;
-    }
-    if (!this.nomeInput || !this.cpfInput) {
-      this.toastService.showToast({ message: 'Preencha nome e CPF.' });
-      return;
-    }
-    try {
-      await this.loadingService.present();
-      const status = await Network.getStatus();
-
-      if (!status.connected) {
-        this.loadingService.dismiss();
-        await this.armazenarBeneficiariosLocalmente(this.nomeInput, this.cpfInput, this.bairro);
-        return;
-      }
-      await this.novaEntregaPorNomeCpf(this.nomeInput, this.cpfInput, null, this.bairro);
-      this.toastService.showToast({ message: 'Entrega efetuada com sucesso', cssClass: 'toast-success' });
-      this.modalEntregaNomeCpf = false;
-      this.nomeInput = '';
-      this.cpfInput = '';
-      await this.atualizaOnlineCounter();
-      await this.atualizarOfflineCounter();
-    } catch (error) {
-      this.toastService.showToast({ message: 'Erro ao entregar benefício', cssClass: 'toast-error' });
-    } finally {
-      await this.loadingService.dismiss();
-    }
-  }
-
-  async novaEntregaPorNomeCpf(nome: string, cpf: string, base64?: string, bairro?: number) {
-    const obj: BeneficiosDiversos = new BeneficiosDiversos(null);
-    obj.codigo = 0;
-    obj.situacao = 8;
-    obj.cpf = cpf;
-    obj.bairro_novo.codigo = bairro
-    obj.nome = nome;
-    obj.tipoBeneficio.codigo = 1235;
-    obj.dataEntrega = new Date();
-    obj.entregador = new Funcionarios(this.usuarioLogado)
-    const arquivoEnvio = {
-      descricao: 'Foto da Entrega',
-      flagUpoload: 1,
-      extensao: '.png',
-    };
-
-    const arquivo = new ArquivoBeneficio(arquivoEnvio);
-
-    const imagem =
-      Mentor.rodaTransacaoFromObjeto(
-        2009,
-        'objArquivoBeneficio',
-        arquivo,
-        true
-      );
-
-    obj.arquivos = [imagem['ArquivoBeneficio']];
-
-    this.listaBeneficiarios.push({
-      nome,
-      cpf,
-      situacao: 8
-    });
-    console.log('1-1', obj)
-    Mentor.rodaTransacaoFromObjeto(
-      2008,
-      'objEntregaBeneficioDiverso',
-      obj,
-      true
-    );
-
-    await this.loadingService.dismiss();
-
-    if (!base64 || base64 == '' || base64 == null) {
-      const alerta =
-        await this.alertController.create({
-          header: 'Foto da Entrega',
-          message: 'Realizar foto da entrega',
-          backdropDismiss: false,
-          buttons: [
-            {
-              text: 'OK',
-              handler: async () => {
-                await this.salvarFoto(
-                  imagem['ArquivoBeneficio'].codigo
-                );
-
-              },
-            },
-          ],
-        });
-
-      await alerta.present();
-      await alerta.onDidDismiss();
-    }
-
-    if (base64) {
-      let blob: Blob;
-      blob = this.base64ToBlob(base64);
-      await this.uploadFoto(imagem['ArquivoBeneficio'].codigo, blob)
-    }
-
-
-  }
+  // ------------------------------- SCANNER -------------------------------
 
   async checkCameraSupport() {
     this.isCameraSupported =
@@ -266,91 +164,41 @@ export class ValidacaoPage implements OnDestroy {
   }
 
   async startScan() {
-
     try {
-
       await this.loadingService.present();
-
       await this.scannerService.baixaGoogleScannerModule();
-
     } finally {
-
       await this.loadingService.dismiss();
-
     }
-
     const scannedCode =
       await this.scannerService.startScan();
 
     if (!scannedCode) return;
-
-    await this.validaCodigo(scannedCode);
-
-  }
-
-  async validaCpf() {
-    console.log(this.cpfInput, '1')
-    if (!this.cpfInput) {
-
+    const valido = this.validarCPF(scannedCode);
+    if (!valido) {
       this.toastService.showToast({
-        message: `Sem CPF`,
+        message: 'CPF inválido. Tente novamente.',
+        cssClass: 'toast-error'
       });
-
-      return;
-
-    }
-    var bol = this.validarCPF(this.cpfInput);
-
-    if (!bol) {
-      this.toastService.showToast({ message: 'CPF Inválido.' });
-      return;
-    }
-
-    const cpf = this.cpfInput.replace(/\D/g, '');
-
-    await this.validaCodigo(cpf);
-
-  }
-
-  async validaCodigo(codigo: string) {
-    try {
-      await this.loadingService.present();
-      await this.validaCodigoOnline(codigo);
-    } catch (error) {
-      this.toastService.showToast({ message: error });
-    } finally {
-      await this.loadingService.dismiss();
+      return this.startScan();
+    } else {
+      this.realizarEntrega(scannedCode);
     }
   }
 
-  async validaCodigoOnline(
-    codigo: string,
-    sincroniza = true,
-    blobFoto?: Blob
-  ) {
-
+  // ------------------------------- ENTREGA BENEFÍCIO -------------------------------
+  async realizarEntrega(cpf: string) {
     try {
-      const codigoLimpo = codigo.replace(/\D/g, '');
-      let checaBeneficio = this.listaBeneficiarios.find(
-        (beneficio) =>
-          beneficio.cpf.replace(/\D/g, '') === codigoLimpo
+      const beneficiario = this.listaBeneficiarios.find(
+        (b) => b.cpf === cpf
       );
-
-      console.log('1',checaBeneficio)
-
-      if (checaBeneficio?.situacao === 8) {
-
+      if (beneficiario?.situacao === 8) {
         this.toastService.showToast({
-          message: `Usuário ${checaBeneficio.nome} já recebeu o benefício`,
+          message: `Usuário ${beneficiario.nome} já recebeu o benefício`,
         });
-
         return;
-
       }
-      console.log('2',checaBeneficio)
-      
-      if (!checaBeneficio) {
-        await this.loadingService.dismiss();
+      if (!beneficiario) {
         const alerta =
           await this.alertController.create({
             header: 'Usuário não listado',
@@ -370,181 +218,296 @@ export class ValidacaoPage implements OnDestroy {
               },
             ],
           });
-
         await alerta.present();
         await alerta.onDidDismiss();
-
         return;
-
       }
-      checaBeneficio.entregador = new Funcionarios(this.usuarioLogado)
       const status = await Network.getStatus();
 
-      if (!status.connected) {
-        
-        await this.salvarFoto(codigo);
-        checaBeneficio.situacao = 8;
-        this.toastService.showToast({
-          message: `Entrega salva offline`,
-          cssClass: 'toast-success',
-        });
-        return;
-
+      if (status.connected && beneficiario) {
+        this.entregaComBeneficiarioInternet(beneficiario);
       }
-
-      const obj: BeneficiosDiversos =
-        new BeneficiosDiversos(checaBeneficio);
-      console.log('obj1',obj)
-      obj.dataEntrega = new Date();
-      const arquivoEnvio = {
-        descricao: 'Foto da Entrega',
-        flagUpoload: 1,
-        extensao: '.png',
-      };
-
-      const arquivo = new ArquivoBeneficio(arquivoEnvio);
-
-      const imagem =
-        Mentor.rodaTransacaoFromObjeto(
-          2009,
-          'objArquivoBeneficio',
-          arquivo,
-          true
-        );
-
-      obj.situacao = 8;
-      checaBeneficio.situacao = 8;
-
-      obj.arquivos = [imagem['ArquivoBeneficio']];
-
-      Mentor.rodaTransacaoFromObjeto(
-        2008,
-        'objEntregaBeneficioDiverso',
-        obj,
-        true
-      );
-
-      if (!blobFoto) {
-
-        try {
-          await this.loadingService.dismiss();
-        } catch { }
-
-        const alerta =
-          await this.alertController.create({
-            header: 'Foto da Entrega',
-            message: 'Realizar foto da entrega',
-            backdropDismiss: false,
-            buttons: [
-              {
-                text: 'OK',
-                handler: async () => {
-
-                  await this.salvarFoto(
-                    imagem['ArquivoBeneficio'].codigo
-                  );
-
-                },
-              },
-            ],
-          });
-
-        await alerta.present();
-        await alerta.onDidDismiss();
-
-      } else {
-
-        await this.uploadFoto(
-          imagem['ArquivoBeneficio'].codigo,
-          blobFoto
-        );
-
+      else if (beneficiario && !status.connected) {
+        this.entregaComBeneficiarioOffline(beneficiario);
       }
-
-      if (sincroniza) {
-
-        this.toastService.showToast({
-          message: `Entrega efetuada com sucesso`,
-          cssClass: 'toast-success',
-        });
-
-      }
-      this.fecharModalCpf();
       await this.atualizaOnlineCounter();
       await this.atualizarOfflineCounter();
-
+      this.status = status.connected;
     } catch (error) {
-
-      console.error('Erro ao validar código:', {
-        codigo,
-        erro: error
-      });
-
-      this.toastService.showToast({
-        message: `Erro ao processar código ${codigo}`,
-        cssClass: 'toast-error'
-      });
-
+      console.log("AQUI 1")
+      console.log(error);
+      console.log(error.mensagem);
+      // this.toastService.showToast({
+      //   message: 'Erro ao realizar entrega. Tente novamente.',
+      //   cssClass: 'toast-error'
+      // });
     }
-
   }
 
-  async carregarEntregasOffline() {
-    await this.criarNovosBeneficiariosLocalmente();
+  async realizarEntregaNova(cpf: string) {
+    try {
+      const status = await Network.getStatus();
+      if (status.connected) {
+        this.entregaSemBeneficiarioInternet(cpf);
+      } else {
+        this.entregaSemBeneficiarioOffline(cpf);
+      }
+    } catch (error) {
+      console.log("AQUI 2");
+      console.log(error);
+      console.log(error.mensagem);
+      // this.toastService.showToast({
+      //   message: 'Erro ao realizar entrega. Tente novamente.',
+      //   cssClass: 'toast-error'
+      // });
+    }
+  }
+
+  async entregaComBeneficiarioInternet(beneficiario: any) {
+    try {
+      const obj: BeneficiosDiversos = new BeneficiosDiversos(beneficiario);
+      obj.entregador = new Funcionarios(this.usuarioLogado)
+      obj.situacao = 8;
+      obj.dataEntrega = new Date();
+      const foto = await this.tirarFoto(obj);
+      if (foto) {
+        this.toastService.showToast({
+          message: `Benefício entregue com sucesso para ${beneficiario.nome}!`,
+          cssClass: 'toast-success'
+        });
+        await this.atualizaOnlineCounter();
+        this.fecharModalCpf();
+      } else {
+        console.log("1");
+        // this.toastService.showToast({
+        //   message: 'Erro ao realizar entrega. Tente novamente.',
+        //   cssClass: 'toast-error'
+        // });
+      }
+    } catch (error) {
+      console.log("AQUI 3")
+      console.log(error);
+      console.log(error.mensagem);
+      // this.toastService.showToast({
+      //   message: 'Erro ao realizar entrega. Tente novamente.',
+      //   cssClass: 'toast-error'
+      // });
+    }
+  }
+
+  async entregaSemBeneficiarioInternet(cpf: string) {
+    try {
+      if (this.bairro === 0 || this.cpfInput === "" || this.nomeInput === "") {
+        this.toastService.showToast({
+          message: 'Todos os campos são obrigatórios.',
+          cssClass: 'toast-error'
+        });
+        return;
+      } else {
+        const obj: BeneficiosDiversos = new BeneficiosDiversos(null);
+        obj.codigo = 0;
+        obj.cpf = cpf;
+        obj.tipoBeneficio.codigo = 1321;
+        obj.nome = this.nomeInput;
+        obj.bairro_novo.codigo = this.bairro;
+        obj.dataEntrega = new Date();
+        obj.entregador = new Funcionarios(this.usuarioLogado);
+        obj.situacao = 8;
+        const foto = await this.tirarFoto(obj);
+        if (foto) {
+          this.toastService.showToast({
+            message: `Benefício entregue com sucesso para ${obj.nome}!`,
+            cssClass: 'toast-success'
+          });
+          await this.atualizaOnlineCounter();
+          this.fecharModalNomeCpf();
+        } else {
+          console.log("2");
+          // this.toastService.showToast({
+          //   message: 'Erro ao realizar entrega. Tente novamente.',
+          //   cssClass: 'toast-error'
+          // });
+        }
+      }
+    } catch (error) {
+      console.log("AQUI 3")
+      console.log(error);
+      console.log(error.mensagem);
+      // this.toastService.showToast({
+      //   message: 'Erro ao realizar entrega. Tente novamente.',
+      //   cssClass: 'toast-error'
+      // });
+    }
+  }
+
+  async entregaSemBeneficiarioOffline(cpf: string) {
+    try {
+      if (this.bairro === 0 || this.cpfInput === "" || this.nomeInput === "") {
+        this.toastService.showToast({
+          message: 'Todos os campos são obrigatórios.',
+          cssClass: 'toast-error'
+        });
+        return;
+      } else {
+        const obj: BeneficiosDiversos = new BeneficiosDiversos(null);
+        obj.codigo = 0;
+        obj.cpf = cpf;
+        obj.tipoBeneficio.codigo = 1321;
+        obj.nome = this.nomeInput;
+        obj.bairro_novo.codigo = this.bairro;
+        obj.dataEntrega = new Date();
+        obj.entregador = new Funcionarios(this.usuarioLogado);
+        obj.situacao = 8;
+        const foto = await this.tirarFoto(obj);
+        if (!foto) {
+          this.toastService.showToast({
+            message: 'Erro ao tirar foto. Tente novamente.',
+            cssClass: 'toast-error'
+          });
+          return;
+        }
+        if (typeof foto !== 'string') {
+          return;
+        } else {
+          obj.arquivos[0].descricao = foto;
+          this.storageService.setValueList(StorageKeysEnums.beneficiarioOffline, obj);
+          this.fecharModalNomeCpf();
+          this.toastService.showToast({
+            message: `Benefício para ${this.nomeInput} salvo offline. Será enviado quando houver conexão com a internet.`,
+            cssClass: 'toast-success'
+          });
+        }
+      }
+    } catch (error) {
+      console.log("AQUI 4")
+      console.log(error);
+      console.log(error.mensagem);
+      // this.toastService.showToast({
+      //   message: 'Erro ao realizar entrega. Tente novamente.',
+      //   cssClass: 'toast-error'
+      // });
+    }
+  }
+
+  async entregaComBeneficiarioOffline(beneficiario: any) {
+    try {
+      const obj: BeneficiosDiversos = new BeneficiosDiversos(beneficiario);
+      console.log("1");
+      obj.entregador = new Funcionarios(this.usuarioLogado)
+      console.log("2");
+      console.log("3");
+      obj.dataEntrega = new Date();
+      console.log("4");
+      obj.situacao = 8;
+      console.log("5");
+      const foto = await this.tirarFoto(obj);
+      console.log("6");
+      if (typeof foto !== 'string') {
+        console.log("7");
+        return;
+      } else {
+        console.log("8");
+        obj.arquivos[0].descricao = foto;
+        this.storageService.setValueList(StorageKeysEnums.beneficiarioOffline, obj);
+        this.toastService.showToast({
+          message: `Benefício para ${this.nomeInput} salvo offline. Será enviado quando houver conexão com a internet.`,
+          cssClass: 'toast-success'
+        });
+      }
+      this.fecharModalCpf();
+    } catch (error) {
+      console.log("AQUI 5")
+      console.log(error);
+      console.log(error.mensagem);
+      // this.toastService.showToast({
+      //   message: 'Erro ao realizar entrega. Tente novamente.',
+      //   cssClass: 'toast-error'
+      // });
+    }
+  }
+
+  async atualizarBeneficiariosOffline() {
+    console.log('Iniciando atualização de beneficiários offline');
+    const beneficiariosOffline =
+      (await this.storageService.getValue<any[]>(
+        StorageKeysEnums.beneficiarioOffline
+      )) ?? [];
+
+    for (const beneficiario of beneficiariosOffline) {
+      if (!beneficiario.arquivos[0]) continue;
+      const blob = this.base64ToBlob(beneficiario.arquivos[0].descricao);
+      beneficiario.arquivos = [];
+      const imagem = await this.uploadFoto(beneficiario, blob);
+      console.log(imagem)
+      if (imagem) {
+        this.toastService.showToast({
+          message: `Benefício entregue com sucesso para ${beneficiario.nome}!`,
+          cssClass: 'toast-success'
+        });
+        await this.atualizaOnlineCounter();
+      } else {
+        console.log("3");
+        // this.toastService.showToast({
+        //   message: `Erro ao realizar entrega para ${beneficiario.nome}. Tente novamente.`,
+        //   cssClass: 'toast-error'
+        // });
+      }
+    }
+    await this.storageService.setValue(
+      StorageKeysEnums.beneficiarioOffline, []
+    );
+    await this.atualizarOfflineCounter();
+  }
+  // ------------------------------- CONTADORES -------------------------------
+
+  async atualizarOfflineCounter() {
     const entregas =
       (await this.storageService.getValue<any[]>(
         StorageKeysEnums.beneficiarioOffline
       )) ?? [];
 
-    if (!entregas.length) return;
-
-    let restantes = [...entregas];
-
-    for (const entrega of entregas) {
-      try {
-
-        let blob: Blob;
-        if (entrega.foto instanceof Blob) {
-
-          blob = entrega.foto;
-
-        } else {
-
-          blob = this.base64ToBlob(entrega.foto);
-
-        }
-        await this.validaCodigoOnline(
-          entrega.codigo,
-          true,
-          blob
-        );
-        restantes = restantes.filter(
-          (e) => e.codigo !== entrega.codigo
-        );
-
-      } catch (error) {
-
-        await this.toastService.showToast({
-          message: 'Erro na sincronização',
-          cssClass: 'toast-error'
-        })
-
-      }
-
-    }
-    await this.toastService.showToast({ message: 'Entregas sincronizadas', cssClass: 'toast-success' })
-    await this.storageService.setValue(
-      StorageKeysEnums.beneficiarioOffline,
-      restantes
-    );
-    this.offlineCounter = restantes.length;
-    await this.atualizaOnlineCounter();
-    await this.atualizarOfflineCounter();
+    this.offlineCounter = entregas.length;
   }
 
-  async salvarFoto(codigo: string) {
+  async atualizaOnlineCounter() {
+
     try {
 
+      const retorno: any = Mentor.bind(
+        `varsituacao=8`,
+        'jsp/appEntregaBeneficioDiversos/totalDiario.jsp',
+        'POST'
+      );
+
+      const parsed = JSON.parse(retorno);
+
+      this.onlineCounter =
+        parsed.totalEntregasDiarias;
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  }
+
+  // ------------------------------- FOTOS -------------------------------
+
+  async tirarFoto(beneficiario: any): Promise<any> {
+    const alert = await this.alertController.create({
+      header: 'Tirar Foto',
+      message: 'É necessário tirar uma foto para realizar a entrega. Deseja tirar a foto agora?',
+      buttons: [
+        {
+          text: 'OK',
+          role: 'confirm'
+        }
+      ],
+    });
+    await alert.present();
+    await alert.onDidDismiss();
+    try {
       const cameraResults: Photo =
         await Camera.getPhoto({
           quality: 90,
@@ -553,77 +516,76 @@ export class ValidacaoPage implements OnDestroy {
           source: CameraSource.Camera,
         });
 
-      const response =
-        await fetch(cameraResults.webPath!);
-
+      const response = await fetch(cameraResults.webPath!);
       const blob = await response.blob();
 
-      const status = await Network.getStatus();
-
-      if (!status.connected) {
-
-        const base64 =
-          await this.blobToBase64(blob);
-
-        let lista =
-          (await this.storageService.getValue<any[]>(
-            StorageKeysEnums.beneficiarioOffline
-          )) ?? [];
-
-        lista.push({
-          codigo,
-          foto: base64,
-        });
-
-        await this.storageService.setValue(
-          StorageKeysEnums.beneficiarioOffline,
-          lista
-        );
-        this.offlineCounter = lista.length;
-        return;
-
+      const networkStatus = await Network.getStatus();
+      if (networkStatus.connected === true) {
+        const fotoUpload = await this.uploadFoto(beneficiario, blob);
+        if (fotoUpload === false) {
+          this.toastService.showToast({
+            message: 'Erro ao salvar foto. Tente novamente.',
+            cssClass: 'toast-error'
+          });
+          return this.tirarFoto(beneficiario);
+        }
+        return true;
+      } else {
+        return await this.blobToBase64(blob);;
       }
-
-      await this.uploadFoto(codigo, blob);
-
     } catch (error) {
       if (error?.message?.includes('User cancelled')) {
-
         this.toastService.showToast({
           message: 'A foto é obrigatória. Tente novamente.',
           cssClass: 'toast-error'
         });
-
-        return this.salvarFoto(codigo);
+        return this.tirarFoto(beneficiario);
       }
-
       console.error('Erro salvar foto', error);
-
     }
-
   }
 
-  async uploadFoto(codigo: string, blob: Blob) {
-
-    const formData = new FormData();
-
-    formData.append('arquivo', blob);
-    formData.append('varCodigo', codigo + '');
-    formData.append('extensaoFoto', '.png');
-
-    const req = new XMLHttpRequest();
-
-    req.open(
-      'POST',
-      Mentor.UrlRequest +
-      'jsp/salvarFotoBeneficioDiversoApp.jsp',
-      true
-    );
-
-    req.send(formData);
-
+  async uploadFoto(beneficiario: any, blob: Blob): Promise<any> {
+    await this.loadingService.present();
+    try {
+      console.log("BENEFICIARIO AQUI");
+      console.log(beneficiario);
+      const imagem =
+        await Mentor.rodaTransacaoFromObjeto(
+          2008,
+          'objEntregaBeneficioDiverso',
+          beneficiario,
+          true,
+        );
+      if (!imagem) {
+        this.toastService.showToast({
+          message: 'Erro ao salvar foto. Tente novamente.',
+          cssClass: 'toast-error'
+        });
+        return false;
+      } else {
+        const codigo = imagem['BeneficiosDiversos'].arquivos[0].codigo;
+        const formData = new FormData();
+        formData.append('arquivo', blob);
+        formData.append('varCodigo', codigo + '');
+        formData.append('extensaoFoto', '.png');
+        const req = new XMLHttpRequest();
+        req.open(
+          'POST',
+          Mentor.UrlRequest +
+          'jsp/salvarFotoBeneficioDiversoApp.jsp',
+          true
+        );
+        req.send(formData);
+      }
+      this.loadingService.dismiss()
+      return true;
+    } catch (error) {
+      this.loadingService.dismiss()
+      return false;
+    }
   }
-
+  
   blobToBase64(blob: Blob): Promise<string> {
 
     return new Promise((resolve, reject) => {
@@ -655,145 +617,5 @@ export class ValidacaoPage implements OnDestroy {
 
     return new Blob([byteArray], { type: 'image/png' });
 
-  }
-
-  async atualizarOfflineCounter() {
-    const entregas =
-      (await this.storageService.getValue<any[]>(
-        StorageKeysEnums.beneficiarioOffline
-      )) ?? [];
-
-    const novos =
-      (await this.storageService.getValue<any[]>(
-        StorageKeysEnums.novosBeneficiariosOffline
-      )) ?? [];
-
-    this.offlineCounter = entregas.length + novos.length;
-  }
-
-  async atualizaOnlineCounter() {
-
-    try {
-
-      const retorno: any = Mentor.bind(
-        `varsituacao=8`,
-        'jsp/appEntregaBeneficioDiversos/totalDiario.jsp',
-        'POST'
-      );
-
-      const parsed = JSON.parse(retorno);
-
-      this.onlineCounter =
-        parsed.totalEntregasDiarias;
-
-    } catch (error) {
-
-      console.error(error);
-
-    }
-
-  }
-
-  async armazenarBeneficiariosLocalmente(nome: string, cpf: string, bairro: number) {
-    var bol = this.validarCPF(this.cpfInput);
-
-    if (!bol) {
-      this.toastService.showToast({ message: 'CPF Inválido.' });
-      return;
-    }
-    const alerta =
-      await this.alertController.create({
-        header: 'Foto da Entrega',
-        message: 'Realizar foto da entrega',
-        backdropDismiss: false,
-        buttons: [
-          {
-            text: 'OK',
-            handler: async () => {
-            },
-          },
-        ],
-      });
-
-    await alerta.present();
-    await alerta.onDidDismiss();
-
-    const cameraResults: Photo =
-      await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-      });
-
-    const response =
-      await fetch(cameraResults.webPath!);
-
-    const blob = await response.blob();
-
-    const base64 =
-      await this.blobToBase64(blob);
-
-    const novosBeneficiarios = {
-      nome,
-      cpf,
-      foto: base64,
-      bairro: bairro,
-      responsavelAlteracao: this.responsavelLeitura.codigo
-    };
-
-    this.beneficiarios.push(novosBeneficiarios);
-    await this.storageService.setValue(
-      StorageKeysEnums.novosBeneficiariosOffline,
-      this.beneficiarios
-    );
-    await this.toastService.showToast({
-      message: 'Beneficiário armazenado localmente',
-      cssClass: 'toast-success'
-    });
-    this.fecharModalNomeCpf();
-  }
-
-  async criarNovosBeneficiariosLocalmente() {
-    const lista =
-      (await this.storageService.getValue<any[]>(
-        StorageKeysEnums.novosBeneficiariosOffline
-      )) ?? [];
-
-    if (!lista.length) return;
-
-    let restantes = [...lista];
-
-    for (const beneficiario of lista) {
-      try {
-        await this.novaEntregaPorNomeCpf(
-          beneficiario.nome,
-          beneficiario.cpf,
-          beneficiario.foto,
-          beneficiario.bairro
-        );
-
-        restantes = restantes.filter(
-          (b) =>
-            b.cpf !== beneficiario.cpf ||
-            b.nome !== beneficiario.nome
-        );
-
-      } catch (error) {
-        console.error('Erro ao sincronizar beneficiário:', beneficiario, error);
-      }
-    }
-
-    await this.toastService.showToast({
-      message: 'Novos benefícios sincronizados na plataforma',
-      cssClass: 'toast-success'
-    })
-
-    await this.storageService.setValue(
-      StorageKeysEnums.novosBeneficiariosOffline,
-      restantes
-    );
-
-    await this.atualizarOfflineCounter();
   }
 }
